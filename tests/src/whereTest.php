@@ -37,5 +37,71 @@ class whereTest extends test {
         errores::$error = false;
     }
 
+    public function test_asigna_data_filtro(): void
+    {
+        errores::$error = false;
+        $wh = new where();
+        $wh = new liberator($wh);
+
+        $filtro_especial_sql = '';
+        $filtro_extra_sql = '';
+        $filtro_rango_sql = '';
+        $filtro_fecha_sql = '';
+        $not_in_sql = '';
+        $sentencia = '';
+        $sql_extra = '';
+        $in = '';
+        $resultado = $wh->asigna_data_filtro('',$filtro_especial_sql, $filtro_extra_sql, $filtro_fecha_sql,
+            $filtro_rango_sql, $in, $not_in_sql, $sentencia, $sql_extra);
+        $this->assertIsObject( $resultado);
+        $this->assertNotTrue(errores::$error);
+
+        errores::$error = false;
+        $wh = new where();
+        $wh = new liberator($wh);
+
+        $filtro_especial_sql = '';
+        $filtro_extra_sql = '';
+        $filtro_rango_sql = 'c';
+        $filtro_fecha_sql = '';
+        $not_in_sql = '';
+        $sentencia = '';
+        $sql_extra = '';
+        $in = 'a';
+        $resultado = $wh->asigna_data_filtro('',$filtro_especial_sql, $filtro_extra_sql, $filtro_fecha_sql,
+            $filtro_rango_sql, $in, $not_in_sql, $sentencia, $sql_extra);
+
+        $this->assertIsObject( $resultado);
+        $this->assertNotTrue(errores::$error);
+        $this->assertEquals('a', $resultado->in);
+        $this->assertEquals('c', $resultado->filtro_rango);
+
+
+        errores::$error = false;
+        $wh = new where();
+        $wh = new liberator($wh);
+
+        $filtro_especial_sql = '';
+        $filtro_extra_sql = '';
+        $filtro_rango_sql = 'c';
+        $filtro_fecha_sql = '';
+        $not_in_sql = '';
+        $sentencia = '';
+        $sql_extra = '';
+        $in = 'a';
+        $diferente_de_sql = 'dif';
+        $resultado = $wh->asigna_data_filtro($diferente_de_sql,$filtro_especial_sql, $filtro_extra_sql,
+            $filtro_fecha_sql, $filtro_rango_sql, $in, $not_in_sql, $sentencia, $sql_extra);
+        $this->assertIsObject( $resultado);
+        $this->assertNotTrue(errores::$error);
+        $this->assertEquals('a', $resultado->in);
+        $this->assertEquals('c', $resultado->filtro_rango);
+        $this->assertEquals('dif', $resultado->diferente_de);
+
+
+
+        errores::$error = false;
+    }
+
 
 }
