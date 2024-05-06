@@ -1,9 +1,16 @@
 <?php
 namespace gamboamartin\src;
+use gamboamartin\errores\errores;
 use stdClass;
 
 class where
 {
+    private errores $error;
+    public function __construct()
+    {
+        $this->error = new errores();
+    }
+
     /**
      * La función 'and_filtro_fecha' agrega 'AND' al string dado si este no está vacío.
      *
@@ -52,6 +59,23 @@ class where
         $filtros->sql_extra = $sql_extra;
         $filtros->filtro_fecha = $filtro_fecha_sql;
         return $filtros;
+    }
+
+    /**
+     * Esta función procesa las entradas proporcionadas y devuelve el "campo" apropiado.
+     *
+     * @param array|string|null $data los datos proporcionados para extraer el campo. Pueden ser de tipos array, string o null.
+     * @param string $key la clave proporcionada para extraer el campo del array.
+     * @return string|array Devuelve el "campo" después de ser procesado y garantiza que no contenga caracteres de escape.
+     *
+     * @throws errores si la clave proporcionada está vacía.
+     */
+    final public function campo(array|string|null $data, string $key):string|array{
+        if($key === ''){
+            return $this->error->error(mensaje: "Error key vacio",data:  $key, es_final: true);
+        }
+        $campo = $data['campo'] ?? $key;
+        return addslashes($campo);
     }
 
 }

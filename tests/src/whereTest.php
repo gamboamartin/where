@@ -103,5 +103,60 @@ class whereTest extends test {
         errores::$error = false;
     }
 
+    public function test_campo(): void
+    {
+        errores::$error = false;
+        $wh = new where();
+        $wh = new liberator($wh);
+
+        $data = '';
+        $key = '';
+        $resultado = $wh->campo(data: $data,key:  $key);
+        $this->assertIsArray( $resultado);
+        $this->assertTrue(errores::$error);
+        $this->assertStringContainsStringIgnoringCase('Error key vacio', $resultado['mensaje']);
+
+        errores::$error = false;
+
+        $data = '';
+        $key = 'a';
+        $resultado = $wh->campo(data: $data,key:  $key);
+        $this->assertIsString( $resultado);
+        $this->assertNotTrue(errores::$error);
+        $this->assertEquals('a',$resultado);
+
+        errores::$error = false;
+
+        $data = array();
+        $key = 'a';
+        $data['b'] = '';
+
+        $resultado = $wh->campo(data: $data,key:  $key);
+        $this->assertIsString( $resultado);
+        $this->assertNotTrue(errores::$error);
+        $this->assertEquals('a',$resultado);
+
+        errores::$error = false;
+
+        $data = array();
+        $key = 'a';
+        $data['a'] = '';
+
+        $resultado = $wh->campo(data: $data,key:  $key);
+        $this->assertIsString( $resultado);
+        $this->assertNotTrue(errores::$error);
+        $this->assertEquals('a',$resultado);
+
+        $data = array();
+        $key = 'a';
+        $data['campo'] = 'x';
+
+        $resultado = $wh->campo(data: $data,key:  $key);
+        $this->assertIsString( $resultado);
+        $this->assertNotTrue(errores::$error);
+        $this->assertEquals('x',$resultado);
+        errores::$error = false;
+    }
+
 
 }
