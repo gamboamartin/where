@@ -1,0 +1,27 @@
+{
+  "name": "gamboa.martin/where",
+  "description": "Sentencias para sql",
+  "type": "library",
+  "license": "GPL-3.0-or-later",
+  "authors": [
+    {
+      "name": "Martin Gamboa",
+      "email": "gamboa.martin@gmail.com"
+    }
+  ],
+    "autoload": {
+        "psr-4": {
+            "gamboamartin\\src\\": "src",
+            "gamboamartin\\tests\\": "tests",
+            "config\\": "config/"
+        }
+    },
+    "require": {
+        "php": "^8.3",
+        "phpunit/phpunit": "^10.0.0",
+        "gamboa.martin/test": "^v5.0.0"
+    },
+    "require-dev": {
+
+    }
+}
