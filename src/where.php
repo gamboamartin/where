@@ -104,4 +104,26 @@ class where
 
     }
 
+    /**
+     * Determina si un campo es un subquery basado en la existencia del campo en las columnas extra.
+     *
+     * @param string $campo El campo a evaluar si es un subquery.
+     * @param array $columnas_extra Las columnas extra donde se va a buscar el campo.
+     * @return bool|array Retorna verdadero si el campo es un subquery, en caso contrario retorna falso.
+     *  En el caso de que el campo esté vacío, se retorna un error.
+     */
+    final public function es_subquery(string $campo, array $columnas_extra): bool|array
+    {
+        $campo = trim($campo);
+        if($campo === ''){
+            return $this->error->error(mensaje:'Error campo esta vacio',  data:$campo, es_final: true);
+        }
+        $es_subquery = false;
+        if(isset($columnas_extra[$campo])){
+            $es_subquery = true;
+        }
+        return $es_subquery;
+
+    }
+
 }
