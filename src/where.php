@@ -78,4 +78,30 @@ class where
         return addslashes($campo);
     }
 
+    /**
+     * La función campo_data_filtro se usa para aplicar ciertas validaciones en la clave del array $data_filtro.
+     *
+     * @param  array $data_filtro El array de entrada que se tiene que validar.
+     * @throws errores Si la clave del array está vacía o si la clave no es un string válido (no numérico).
+     * @return string|array Devuelve la clave del array $data_filtro después de apliar trim() si la validación es exitosa.
+     *                     En caso de error, se devuelve un array con los detalles del error.
+     *
+     */
+    final public function campo_data_filtro(array $data_filtro): string|array
+    {
+        if(count($data_filtro) === 0){
+            return $this->error->error(mensaje:'Error data_filtro esta vacio',  data:$data_filtro, es_final: true);
+        }
+        $campo = key($data_filtro);
+        $campo = trim($campo);
+        if($campo === ''){
+            return $this->error->error(mensaje: "Error key vacio",data:  $campo, es_final: true);
+        }
+        if(is_numeric($campo )){
+            return $this->error->error(mensaje: "Error key debe ser un texto valido",data:  $campo, es_final: true);
+        }
+        return trim($campo);
+
+    }
+
 }

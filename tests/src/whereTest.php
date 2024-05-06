@@ -158,5 +158,20 @@ class whereTest extends test {
         errores::$error = false;
     }
 
+    public function test_campo_data_filtro(){
+        errores::$error = false;
+        $wh = new where();
+        $wh = new liberator($wh);
+
+
+        $data_filtro = array();
+        $data_filtro['a'] = '';
+        $resultado = $wh->campo_data_filtro($data_filtro);
+        //print_r($resultado);exit;
+        $this->assertEquals('a', $resultado);
+        $this->assertNotTrue(errores::$error);
+        errores::$error = false;
+    }
+
 
 }
