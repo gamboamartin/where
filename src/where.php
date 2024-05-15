@@ -193,6 +193,51 @@ class where
     }
 
     /**
+     * POR DOCUMENTAR WIKI FINAL REV
+     * Esta función genera una cadena de declaración SQL AND basada en los filtros y columnas extras proporcionados.
+     *
+     * @param array $columnas_extra Las columnas adicionales que han de considerarse al generar la declaración SQL.
+     * @param array $filtro Los filtros que se utilizarán para la generación de la declaración SQL.
+     *
+     * @return string|array Retornará una cadena que es la declaración SQL AND generada. Si ocurre algún error al
+     * procesar, retornará un objeto de error.
+     *
+     * @throws errores si hay algún problema con los filtros o columnas proporcionados.
+     * @version 16.100.0
+     */
+    final public function genera_and(array $columnas_extra, array $filtro):array|string{
+        $sentencia = '';
+        foreach ($filtro as $key => $data) {
+            if(is_numeric($key)){
+                return $this->error->error(
+                    mensaje: 'Los key deben de ser campos asociativos con referencia a tabla.campo',data: $filtro,
+                    es_final: true);
+            }
+            $data_comparacion = $this->comparacion_pura(columnas_extra: $columnas_extra, data: $data, key: $key);
+            if(errores::$error){
+                return $this->error->error(mensaje:"Error al maquetar campo",data:$data_comparacion);
+            }
+
+            $comparacion = $this->comparacion(data: $data,default: '=');
+            if(errores::$error){
+                return $this->error->error(mensaje:"Error al maquetar",data:$comparacion);
+            }
+
+            $operador = $data['operador'] ?? ' AND ';
+            if(trim($operador) !=='AND' && trim($operador) !=='OR'){
+                return $this->error->error(mensaje:'El operador debe ser AND u OR',data:$operador, es_final: true);
+            }
+
+            $data_sql = "$data_comparacion->campo $comparacion '$data_comparacion->value'";
+
+            $sentencia .= $sentencia === ''? $data_sql :" $operador $data_sql";
+        }
+
+        return $sentencia;
+
+    }
+
+    /**
      * POR DOCUMENTAR EN WIKI FINAL REV
      * Genera y gestiona sentencias AND para operaciones SQL.
      * La función procesa el filtro y las columnas adicionales proporcionadas para generar una sentencia SQL AND.

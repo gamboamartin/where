@@ -268,6 +268,38 @@ class whereTest extends test {
         errores::$error = false;
     }
 
+    public function test_genera_and(){
+
+        errores::$error = false;
+        $wh = new where();
+        $wh = new liberator($wh);
+        $filtro = array();
+        $columnas_extra = array();
+        $resultado = $wh->genera_and($columnas_extra, $filtro);
+        $this->assertIsString($resultado);
+        $this->assertNotTrue(errores::$error);
+        $this->assertEquals('',$resultado);
+
+        errores::$error = false;
+
+        $filtro[] = '';
+        $resultado  = $wh->genera_and($columnas_extra, $filtro);
+        $this->assertIsArray($resultado);
+        $this->assertTrue(errores::$error);
+        $this->assertStringContainsStringIgnoringCase('Los key deben de ser campos asoci', $resultado['mensaje']);
+
+        errores::$error = false;
+
+        $filtro = array();
+        $filtro['x'] = '';
+        $resultado  = $wh->genera_and($columnas_extra, $filtro);
+        $this->assertIsString($resultado);
+        $this->assertNotTrue(errores::$error);
+        $this->assertEquals( "x = ''", $resultado);
+        errores::$error = false;
+    }
+
+
 
     public function test_genera_and_textos(){
         errores::$error = false;
