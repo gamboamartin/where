@@ -126,4 +126,33 @@ class where
 
     }
 
+    /**
+     * POR DOCUMENTAR EN WIKI FINAL REV
+     * Función privada que procesa los datos de entrada y los limpia para su posterior uso.
+     *
+     * @param array|string|null $data Datos de entrada para ser procesados.
+     *
+     * @return string|array En caso de error, retorna un array con detalles del error. De lo contrario,
+     * retorna los datos de entrada procesados y limpios en forma de string.
+     *
+     * @throws errores en caso de que haya algún error durante el proceso.
+     * @version 16.98.0
+     */
+    final public function value(array|string|null $data):string|array{
+        $value = $data;
+        if(is_array($data) && isset($data['value'])){
+            $value = trim($data['value']);
+        }
+        if(is_array($data) && count($data) === 0){
+            return $this->error->error(mensaje: "Error datos vacio",data: $data, es_final: true);
+        }
+        if(is_array($data) && !isset($data['value'])){
+            return $this->error->error(mensaje:"Error no existe valor",data: $data,es_final: true);
+        }
+        if(is_null($value)){
+            $value = '';
+        }
+        return addslashes($value);
+    }
+
 }

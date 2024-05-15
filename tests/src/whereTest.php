@@ -200,5 +200,20 @@ class whereTest extends test {
         errores::$error = false;
     }
 
+    public function test_value(){
+        errores::$error = false;
+        $wh = new where();
+        $wh = new liberator($wh);
+
+
+        $data = '';
+        $resultado = $wh->value($data);
+        $this->assertIsString($resultado);
+        $this->assertNotTrue(errores::$error);
+        $this->assertEquals('', $resultado);
+
+        errores::$error = false;
+    }
+
 
 }
