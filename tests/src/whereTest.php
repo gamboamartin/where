@@ -173,6 +173,19 @@ class whereTest extends test {
         errores::$error = false;
     }
 
+    public function test_comparacion(){
+
+        errores::$error = false;
+        $wh = new where();
+        $wh = new liberator($wh);
+        $data = array();
+        $resultado = $wh->comparacion(data: $data,default: '');
+        $this->assertIsString($resultado);
+        $this->assertNotTrue(errores::$error);
+        $this->assertEmpty($resultado);
+        errores::$error = false;
+    }
+
     public function test_comparacion_pura(){
 
         errores::$error = false;

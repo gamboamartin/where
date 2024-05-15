@@ -106,6 +106,24 @@ class where
 
     /**
      * POR DOCUMENTAR EN WIKI FINAL REV
+     * Función que realiza una comparación.
+     *
+     * Esta función toma un array, cadena de texto, o valor null como datos de entrada,
+     * junto con una cadena de texto por defecto. Revisa si hay una llave 'comparacion'
+     * en los datos de entrada y, si la hay, retorna su valor. Si no hay tal llave,
+     * la función retorna la cadena de texto por defecto.
+     *
+     * @param array|string|null $data Los datos de entrada para la comparación.
+     * @param string $default La cadena de texto por defecto a retornar si la llave 'comparacion' no se encuentra.
+     * @return string El resultado de la comparación, o la cadena por defecto si no hay comparación.
+     * @version 16.96.0
+     */
+    final public function comparacion(array|string|null $data, string $default):string{
+        return $data['comparacion'] ?? $default;
+    }
+
+    /**
+     * POR DOCUMENTAR EN WIKI FINAL REV
      * La función comparacion_pura compara los datos pasados con las columnas extra en base a una llave.
      *
      * @param array $columnas_extra Las columnas extra a considerar en la comparación.
