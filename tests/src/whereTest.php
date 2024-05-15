@@ -173,6 +173,61 @@ class whereTest extends test {
         errores::$error = false;
     }
 
+    public function test_comparacion_pura(){
+
+        errores::$error = false;
+        $wh = new where();
+        $wh = new liberator($wh);
+        $data = array();
+        $columnas_extra = array();
+        $key = '';
+        $resultado = $wh->comparacion_pura($columnas_extra, $data, $key);
+        $this->assertIsArray($resultado);
+        $this->assertTrue(errores::$error);
+        $this->assertStringContainsStringIgnoringCase('Error key vacio', $resultado['mensaje']);
+
+        errores::$error = false;
+
+
+        $resultado = $wh->comparacion_pura($columnas_extra, $data, $key);
+        $this->assertIsArray($resultado);
+        $this->assertTrue(errores::$error);
+        $this->assertStringContainsStringIgnoringCase('Error key vacio', $resultado['mensaje']);
+
+        errores::$error = false;
+
+        $data[] = '';
+        $resultado = $wh->comparacion_pura($columnas_extra, $data, $key);
+        $this->assertIsArray($resultado);
+        $this->assertTrue(errores::$error);
+        $this->assertStringContainsStringIgnoringCase('Error key vacio', $resultado['mensaje']);
+
+
+        errores::$error = false;
+        $data = array();
+        $data['value'] = '';
+        $key = 'x';
+        $resultado = $wh->comparacion_pura($columnas_extra, $data, $key);
+
+        $this->assertIsObject($resultado);
+        $this->assertNotTrue(errores::$error);
+        $this->assertEquals('x', $resultado->campo);
+        $this->assertEquals('', $resultado->value);
+
+
+        errores::$error = false;
+
+        $resultado = $wh->comparacion_pura($columnas_extra, $data, $key);
+        $this->assertIsObject($resultado);
+        $this->assertNotTrue(errores::$error);
+        $this->assertEquals('x', $resultado->campo);
+        $this->assertEquals('', $resultado->value);
+
+        errores::$error = false;
+
+
+    }
+
     public function test_es_subquery(){
         errores::$error = false;
         $wh = new where();

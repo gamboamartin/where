@@ -70,7 +70,7 @@ class where
      *
      * @throws errores si la clave proporcionada está vacía.
      */
-    final public function campo(array|string|null $data, string $key):string|array{
+    private function campo(array|string|null $data, string $key):string|array{
         if($key === ''){
             return $this->error->error(mensaje: "Error key vacio",data:  $key, es_final: true);
         }
@@ -102,6 +102,54 @@ class where
         }
         return trim($campo);
 
+    }
+
+    /**
+     * POR DOCUMENTAR EN WIKI FINAL REV
+     * La función comparacion_pura compara los datos pasados con las columnas extra en base a una llave.
+     *
+     * @param array $columnas_extra Las columnas extra a considerar en la comparación.
+     * @param array|string|null $data Los datos que se van a comparar con las columnas extra, puede ser un array,
+     *  un string o nulo.
+     * @param string $key La llave que se usará en la comparación.
+     *
+     * @return array|stdClass Retorna un objeto con los resultados de la comparación, si se encuentra algún error
+     *  durante la comparación,
+     * se retornará un objeto con información del error.
+     *
+     * @throws errores Si la llave esta vacía.
+     * @throws errores Si los datos están vacíos.
+     * @throws errores Si hay un error al maquetar el campo con los datos y la llave.
+     * @throws errores Si hay un error al validar la maquetación.
+     * @version 16.99.0
+     *
+     */
+    final public function comparacion_pura(array $columnas_extra, array|string|null $data, string $key):array|stdClass{
+
+        if($key === ''){
+            return $this->error->error(mensaje: "Error key vacio", data: $key, es_final: true);
+        }
+        if(is_array($data) && count($data) === 0){
+            return $this->error->error(mensaje:"Error datos vacio",data: $data, es_final: true);
+        }
+        $datas = new stdClass();
+        $datas->campo = $this->campo(data: $data,key:  $key);
+        if(errores::$error){
+            return $this->error->error(mensaje:"Error al maquetar campo",data: $datas->campo);
+        }
+        $datas->value = $this->value(data: $data);
+        if(errores::$error){
+            return $this->error->error(mensaje:"Error al validar maquetacion",data: $datas->value);
+        }
+        $es_sq = false;
+        if(isset($columnas_extra[$key])){
+            $es_sq = true;
+        }
+        if($es_sq){
+            $datas->campo = $columnas_extra[$key];
+        }
+
+        return $datas;
     }
 
     /**
@@ -138,7 +186,7 @@ class where
      * @throws errores en caso de que haya algún error durante el proceso.
      * @version 16.98.0
      */
-    final public function value(array|string|null $data):string|array{
+    private function value(array|string|null $data):string|array{
         $value = $data;
         if(is_array($data) && isset($data['value'])){
             $value = trim($data['value']);
