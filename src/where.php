@@ -118,7 +118,7 @@ class where
      * @return string El resultado de la comparación, o la cadena por defecto si no hay comparación.
      * @version 16.96.0
      */
-    final public function comparacion(array|string|null $data, string $default):string{
+    private function comparacion(array|string|null $data, string $default):string{
         return $data['comparacion'] ?? $default;
     }
 
@@ -142,7 +142,7 @@ class where
      * @version 16.99.0
      *
      */
-    final public function comparacion_pura(array $columnas_extra, array|string|null $data, string $key):array|stdClass{
+    private function comparacion_pura(array $columnas_extra, array|string|null $data, string $key):array|stdClass{
 
         if($key === ''){
             return $this->error->error(mensaje: "Error key vacio", data: $key, es_final: true);
@@ -189,6 +189,62 @@ class where
             $es_subquery = true;
         }
         return $es_subquery;
+
+    }
+
+    /**
+     * POR DOCUMENTAR EN WIKI FINAL REV
+     * Genera y gestiona sentencias AND para operaciones SQL.
+     * La función procesa el filtro y las columnas adicionales proporcionadas para generar una sentencia SQL AND.
+     *
+     * @param array $columnas_extra Columnas adicionales para usar en la generación de sentencias.
+     * @param array $filtro Los filtros que se aplicarán a la sentencia SQL.
+     * @return array|string Devuelve una sentencia SQL estructurada como un string.
+     *
+     * @throws errores Si los filtros proporcionados tienen claves numéricas.
+     * Las claves deben hacer referencia a campo de una tabla en formato "tabla.campo".
+     *
+     * @throws errores Si se produce un error durante la construcción de la sentencia SQL.
+     *
+     * @example
+     * genera_and_textos(['columna1', 'columna2'], ['tabla.campo' => 'valor']);
+     * Esto generará una sentencia SQL AND que puede parecerse a "tabla.campo LIKE '%valor%'".
+     * Nota: El operador predeterminado es 'LIKE'.
+     * @version 16.101.0
+     */
+    final public function genera_and_textos(array $columnas_extra, array $filtro):array|string{
+
+        $sentencia = '';
+        foreach ($filtro as $key => $data) {
+            if(is_numeric($key)){
+                return $this->error->error(
+                    mensaje: 'Los key deben de ser campos asociativos con referencia a tabla.campo',data: $filtro,
+                    es_final: true);
+            }
+
+            $data_comparacion = $this->comparacion_pura(columnas_extra: $columnas_extra, data: $data,key:  $key);
+            if(errores::$error){
+                return $this->error->error(mensaje: "Error al maquetar",data:$data_comparacion);
+            }
+
+            $comparacion = $this->comparacion(data: $data,default: 'LIKE');
+            if(errores::$error){
+                return $this->error->error(mensaje:"Error al maquetar",data:$comparacion);
+            }
+
+            $txt = '%';
+            $operador = 'AND';
+            if(isset($data['operador']) && $data['operador']!==''){
+                $operador = $data['operador'];
+                $txt= '';
+            }
+
+            $sentencia .= $sentencia === ""?"$data_comparacion->campo $comparacion '$txt$data_comparacion->value$txt'":
+                " $operador $data_comparacion->campo $comparacion '$txt$data_comparacion->value$txt'";
+        }
+
+
+        return $sentencia;
 
     }
 

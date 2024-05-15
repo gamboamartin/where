@@ -268,6 +268,21 @@ class whereTest extends test {
         errores::$error = false;
     }
 
+
+    public function test_genera_and_textos(){
+        errores::$error = false;
+        $wh = new where();
+        $wh = new liberator($wh);
+
+
+        $columnas_extra = array();
+        $filtro = array();
+        $resultado = $wh->genera_and_textos($columnas_extra, $filtro);
+        $this->assertIsString($resultado);
+        $this->assertNotTrue(errores::$error);
+        $this->assertEquals( "", $resultado);
+        errores::$error = false;
+    }
     public function test_value(){
         errores::$error = false;
         $wh = new where();
