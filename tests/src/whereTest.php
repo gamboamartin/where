@@ -828,6 +828,24 @@ class whereTest extends test {
 
     }
 
+    public function test_in_sql(){
+        errores::$error = false;
+        $wh = new where();
+        $wh = new liberator($wh);
+
+
+        $values = array();
+        $values[] = '1';
+        $values[] = '2';
+        $llave = 'a';
+        $resultado = $wh->in_sql($llave, $values);
+        $this->assertIsString($resultado);
+        $this->assertNotTrue(errores::$error);
+        $this->assertEquals("a IN ('1' ,'2')",$resultado);
+        errores::$error = false;
+
+    }
+
     public function test_integra_filtro_extra(){
         errores::$error = false;
         $wh = new where();

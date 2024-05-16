@@ -21,7 +21,8 @@
         "phpunit/phpunit": "^10.0.0",
         "gamboa.martin/test": "^v5.0.0",
         "gamboa.martin/validacion": "^v5.0.0",
-        "gamboa.martin/validaciones": "^v1.0.0"
+        "gamboa.martin/validaciones": "^v1.0.0",
+        "gamboa.martin/sql": "^v1.0.0"
     },
     "require-dev": {
 

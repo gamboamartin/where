@@ -802,6 +802,8 @@ class where
 
     }
 
+
+
     /**
      * POR DOCUMENTAR EN WIKI FINAL REV
      * Genera y gestiona sentencias AND para operaciones SQL.
@@ -979,6 +981,8 @@ class where
         return $filtro_rango_sql_r;
     }
 
+
+
     /**
      * POR DOCUMENTAR EN WIKI FINAL REV
      * Genera la sentencia SQL base de filtro según el tipo de filtro
@@ -1012,6 +1016,52 @@ class where
             }
         }
         return $sentencia;
+    }
+
+    /**
+     * POR DOCUMENTAR EN WIKI FINAL REV
+     * La función in_sql genera y valida una instrucción SQL IN.
+     *
+     * @param string $llave El nombre del campo que se utilizará en la instrucción IN.
+     * @param array $values Un array con los valores que se usarán en la instrucción IN.
+     *
+     * @return array|string Regresa una instrucción SQL IN si todo sale bien.
+     * Regresa un mensaje de error si se detecta algún problema durante la generación o validación del SQL.
+     *
+     * La función sigue los siguientes pasos:
+     * - Primero, verifica que la $llave no sea una cadena vacía.
+     * - Luego, intenta generar una cadena con los valores para la instrucción IN.
+     * - Después valida la instrucción `IN` generada.
+     * - Finalmente, intenta generar una instrucción SQL `IN` completa y la retorna.
+     *
+     * Notas:
+     * - Si se encuentra algún error durante el proceso, la función retorna inmediatamente un mensaje de error.
+     * - Cada paso de generación y validación puede disparar un error, así que se comprueba después de cada paso.
+     *
+     * @version 16.291.1
+     */
+    private function in_sql(string $llave, array $values): array|string
+    {
+        $llave = trim($llave);
+        if($llave === ''){
+            return $this->error->error(mensaje: 'Error la llave esta vacia',data: $llave, es_final: true);
+        }
+
+        $values_sql = $this->values_sql_in(values:$values);
+        if(errores::$error){
+            return $this->error->error(mensaje: 'Error al generar sql',data: $values_sql);
+        }
+        $valida = (new sql)->valida_in(llave: $llave, values_sql: $values_sql);
+        if(errores::$error){
+            return $this->error->error(mensaje: 'Error al validar in', data: $valida);
+        }
+
+        $in_sql = (new sql())->in(llave: $llave,values_sql:  $values_sql);
+        if(errores::$error){
+            return $this->error->error(mensaje: 'Error al generar sql',data: $in_sql);
+        }
+
+        return $in_sql;
     }
 
     /**
@@ -1595,7 +1645,7 @@ class where
      * o un mensaje de error si se encuentra algún problema.
      * @version 16.262.1
      */
-    final public function values_sql_in(array $values): string|array
+    private function values_sql_in(array $values): string|array
     {
         $values_sql = '';
         foreach ($values as $value){
