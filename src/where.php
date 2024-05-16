@@ -488,7 +488,7 @@ class where
      * @version 16.258.1
      *
      */
-    private function filtro_extra_sql(array $filtro_extra):array|string{
+    final public function filtro_extra_sql(array $filtro_extra):array|string{
         $filtro_extra_sql = '';
         foreach($filtro_extra as $data_filtro){
             if(!is_array($data_filtro)){
