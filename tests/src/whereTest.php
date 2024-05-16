@@ -173,6 +173,24 @@ class whereTest extends test {
         errores::$error = false;
     }
 
+    public function test_campo_filtro_especial(): void
+    {
+        errores::$error = false;
+        $wh = new where();
+        $wh = new liberator($wh);
+
+        $campo = 'a';
+        $columnas_extra = array();
+        $columnas_extra['a'] = 'x';
+        $resultado = $wh->campo_filtro_especial($campo, $columnas_extra);
+
+        $this->assertIsString( $resultado);
+        $this->assertNotTrue(errores::$error);
+        $this->assertEquals('x', $resultado);
+
+        errores::$error = false;
+    }
+
     public function test_comparacion(){
 
         errores::$error = false;
@@ -239,6 +257,64 @@ class whereTest extends test {
         errores::$error = false;
 
 
+    }
+
+    public function test_data_sql(){
+        errores::$error = false;
+        $wh = new where();
+        $wh = new liberator($wh);
+
+        $campo = 'z';
+        $campo_filtro = 'x';
+        $filtro = array();
+        $filtro['x']['operador'] = 's';
+        $filtro['x']['valor'] = 's';
+
+        $resultado = $wh->data_sql($campo, $campo_filtro, $filtro);
+
+        //print_r($resultado);exit;
+        $this->assertIsString($resultado);
+        $this->assertNotTrue(errores::$error);
+        $this->assertEquals(" z s 's' ", $resultado);
+        errores::$error = false;
+    }
+
+    public function test_data_sql_base(){
+        errores::$error = false;
+        $wh = new where();
+        $wh = new liberator($wh);
+
+        $campo = 'c';
+        $campo_filtro = 'a';
+        $filtro = array();
+        $filtro['a']['operador'] = '=>';
+        $filtro['a']['valor'] = '';
+        $resultado = $wh->data_sql_base($campo, $campo_filtro, $filtro);
+        //print_r($resultado);exit;
+        $this->assertIsString($resultado);
+        $this->assertNotTrue(errores::$error);
+        $this->assertEquals(" c => '' ", $resultado);
+        errores::$error = false;
+    }
+
+    public function test_data_sql_campo(){
+        errores::$error = false;
+        $wh = new where();
+        $wh = new liberator($wh);
+
+
+        $campo = 'v';
+        $campo_filtro = 'a';
+        $filtro = array();
+        $filtro['a']['operador'] = 'c';
+        $filtro['a']['valor'] = '';
+        $resultado = $wh->data_sql_campo($campo, $campo_filtro, $filtro);
+        // print_r($resultado);exit;
+        $this->assertIsString($resultado);
+        $this->assertNotTrue(errores::$error);
+        $this->assertStringContainsStringIgnoringCase("'v'c", $resultado);
+
+        errores::$error = false;
     }
 
     public function test_es_subquery(){
@@ -313,6 +389,97 @@ class whereTest extends test {
         $this->assertIsString($resultado);
         $this->assertNotTrue(errores::$error);
         $this->assertEquals( "", $resultado);
+        errores::$error = false;
+    }
+
+    public function test_valida_campo_filtro(){
+        errores::$error = false;
+        $wh = new where();
+        $wh = new liberator($wh);
+
+        $campo = '';
+        $campo_filtro = '';
+        $filtro = array();
+        $resultado = $wh->valida_campo_filtro($campo, $campo_filtro, $filtro);
+        $this->assertIsArray($resultado);
+        $this->assertTrue(errores::$error);
+        $this->assertEquals('Error campo_filtro esta vacio',$resultado['mensaje_limpio']);
+        errores::$error = false;
+
+        $campo = '';
+        $campo_filtro = 'a';
+        $filtro = array();
+        $resultado = $wh->valida_campo_filtro($campo, $campo_filtro, $filtro);
+
+        $this->assertIsArray($resultado);
+        $this->assertTrue(errores::$error);
+        $this->assertEquals('Error campo esta vacio',$resultado['mensaje_limpio']);
+        errores::$error = false;
+
+        $campo = 'b';
+        $campo_filtro = 'a';
+        $filtro = array();
+        $resultado = $wh->valida_campo_filtro($campo, $campo_filtro, $filtro);
+        $this->assertIsArray($resultado);
+        $this->assertTrue(errores::$error);
+        $this->assertEquals('Error no existe $filtro[a]',$resultado['mensaje_limpio']);
+
+        errores::$error = false;
+
+        $campo = 'b';
+        $campo_filtro = 'a';
+        $filtro = array();
+        $filtro['a'] = '';
+        $resultado = $wh->valida_campo_filtro($campo, $campo_filtro, $filtro);
+        $this->assertIsArray($resultado);
+        $this->assertTrue(errores::$error);
+        $this->assertEquals('Error no es un array $filtro[a]',$resultado['mensaje_limpio']);
+
+        errores::$error = false;
+
+        $campo = 'b';
+        $campo_filtro = 'a';
+        $filtro = array();
+        $filtro['a'] = array();
+        $resultado = $wh->valida_campo_filtro($campo, $campo_filtro, $filtro);
+        $this->assertIsArray($resultado);
+        $this->assertTrue(errores::$error);
+        $this->assertEquals('Error no existe $filtro[a][operador]',$resultado['mensaje_limpio']);
+
+        errores::$error = false;
+
+        $campo = 'b';
+        $campo_filtro = 'a';
+        $filtro = array();
+        $filtro['a']['operador'] = '';
+        $resultado = $wh->valida_campo_filtro($campo, $campo_filtro, $filtro);
+        $this->assertIsArray($resultado);
+        $this->assertTrue(errores::$error);
+        $this->assertEquals('Error no existe $filtro[a][valor]',$resultado['mensaje_limpio']);
+
+        errores::$error = false;
+
+        $campo = 'b';
+        $campo_filtro = 'a';
+        $filtro = array();
+        $filtro['a']['operador'] = '';
+        $filtro['a']['valor'] = '';
+        $resultado = $wh->valida_campo_filtro($campo, $campo_filtro, $filtro);
+        $this->assertIsArray($resultado);
+        $this->assertTrue(errores::$error);
+        $this->assertEquals('Error esta vacio $filtro[a][operador]',$resultado['mensaje_limpio']);
+
+        errores::$error = false;
+
+        $campo = 'b';
+        $campo_filtro = 'a';
+        $filtro = array();
+        $filtro['a']['operador'] = 'g';
+        $filtro['a']['valor'] = '';
+        $resultado = $wh->valida_campo_filtro($campo, $campo_filtro, $filtro);
+        $this->assertNotTrue(errores::$error);
+        $this->assertTrue($resultado);
+
         errores::$error = false;
     }
     public function test_value(){

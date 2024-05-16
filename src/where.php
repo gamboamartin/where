@@ -106,6 +106,39 @@ class where
 
     /**
      * POR DOCUMENTAR EN WIKI FINAL REV
+     * Esta función valida el campo proporcionado para ser filtrado y verifica si el campo es parte de una subconsulta.
+     * Si el campo proporcionado está vacío, se retorna un error.
+     * Una verificación adicional se realiza para garantizar si el campo proporcionado pertenece a una subconsulta.
+     *
+     * @param string $campo Representa el campo en el que se aplicará el filtro especial.
+     * @param array $columnas_extra Un array de columnas adicionales que pueden estar presentes en la tabla objetivo.
+     *
+     * @return string|array Retorna el campo de filtro si la validación es exitosa o un objeto de error si hay algún problema.
+     *
+     * @throws errores Puede lanzar una excepción si el campo proporcionado es una subconsulta incorrecta.
+     * @version 16.145.0
+     */
+    final public function campo_filtro_especial(string $campo, array $columnas_extra): array|string
+    {
+        $campo = trim($campo);
+        if($campo === ''){
+            return $this->error->error(mensaje:'Error campo esta vacio',  data:$campo, es_final: true);
+        }
+
+        $es_subquery = (new \gamboamartin\src\where())->es_subquery(campo: $campo,columnas_extra:  $columnas_extra);
+        if(errores::$error){
+            return $this->error->error(mensaje:'Error al subquery bool',  data:$es_subquery);
+        }
+
+        if($es_subquery){
+            $campo = $columnas_extra[$campo];
+        }
+        return $campo;
+
+    }
+
+    /**
+     * POR DOCUMENTAR EN WIKI FINAL REV
      * Función que realiza una comparación.
      *
      * Esta función toma un array, cadena de texto, o valor null como datos de entrada,
@@ -168,6 +201,87 @@ class where
         }
 
         return $datas;
+    }
+
+    /**
+     * POR DOCUMENTAR EN WIKI FINAL REV
+     * Genera una consulta SQL a partir de los parámetros proporcionados.
+     *
+     * @param string $campo Campo de la consulta SQL.
+     * @param string $campo_filtro Campo para el filtrado de la consulta.
+     * @param array $filtro Filtro a aplicar en la consulta.
+     *
+     * @return string|array Retorna el resultado de la consulta SQL o un error si algo va mal.
+     *
+     * @throws errores Error al validar datos o generar la consulta SQL.
+     * @version 16.163.0
+     */
+    final public function data_sql(string $campo, string $campo_filtro, array $filtro): array|string
+    {
+        $valida = $this->valida_campo_filtro(campo: $campo,campo_filtro:  $campo_filtro,filtro:  $filtro);
+        if(errores::$error){
+            return $this->error->error(mensaje:'Error al validar datos',  data:$valida);
+        }
+
+        $data_sql = $this->data_sql_base(campo: $campo,campo_filtro:  $campo_filtro,filtro:  $filtro);
+        if(errores::$error){
+            return $this->error->error(mensaje:'Error al genera sql',  data:$data_sql);
+        }
+
+        if(isset($filtro[$campo_filtro]['valor_es_campo']) && $filtro[$campo_filtro]['valor_es_campo']){
+            $data_sql = $this->data_sql_campo(campo: $campo,campo_filtro:  $campo_filtro,filtro:  $filtro);
+            if(errores::$error){
+                return $this->error->error(mensaje:'Error al genera sql',  data:$data_sql);
+            }
+        }
+        return $data_sql;
+
+    }
+
+    /**
+     * POR DOCUMENTAR EN WIKI FINAL REV
+     * Método para generar una cadena SQL para un filtro base.
+     *
+     * @param string $campo Nombre del campo en la base de datos.
+     * @param string $campo_filtro Nombre del campo del filtro.
+     * @param array $filtro El filtro a aplicar en la sentencia SQL.
+     * @return string|array Retorna una cadena con la sentencia SQL en caso de que se haya generado correctamente,
+     *                      en caso contrario retorna un array con los detalles del error.
+     *
+     * @throws errores Lanza una excepción en caso de errores.
+     * @version 16.152.0
+     */
+    private function data_sql_base(string $campo, string $campo_filtro, array $filtro): string|array
+    {
+        $valida = $this->valida_campo_filtro(campo: $campo,campo_filtro:  $campo_filtro,filtro:  $filtro);
+        if(errores::$error){
+            return $this->error->error(mensaje:'Error al validar datos',  data:$valida);
+        }
+
+        return " ".$campo." " . $filtro[$campo_filtro]['operador'] . " '" . $filtro[$campo_filtro]['valor'] . "' ";
+    }
+
+    /**
+     * POR DOCUMENTAR EN WIKI FINAL REV
+     * Valida el campo del filtro y retorna un string para la consulta SQL o un mensaje de error.
+     *
+     * @param string $campo El campo a validar.
+     * @param string $campo_filtro El campo del filtro a utilizar.
+     * @param array $filtro El array del filtro a aplicar.
+     *
+     * @return string|array Retorna un string formateado para la consulta SQL o un mensaje de error.
+     * @version 16.161.0
+     */
+    private function data_sql_campo(string $campo, string $campo_filtro, array $filtro): string|array
+    {
+
+        $valida = $this->valida_campo_filtro(campo: $campo,campo_filtro:  $campo_filtro,filtro:  $filtro);
+        if(errores::$error){
+            return $this->error->error(mensaje:'Error al validar datos',  data:$valida);
+        }
+
+        return "'".$campo."'".$filtro[$campo_filtro]['operador'].$filtro[$campo_filtro]['valor'];
+
     }
 
     /**
@@ -291,6 +405,66 @@ class where
 
         return $sentencia;
 
+    }
+
+    /**
+     * POR DOCUMENTAR EN WIKI FINAL REV
+     * Comprueba y valida los valores de un campo y un campo de filtro.
+     *
+     * @param string $campo Representa el nombre del campo a validar.
+     * @param string $campo_filtro Es el nombre del campo de filtro.
+     * @param array $filtro Es un array que contiene los filtros a aplicar.
+     *
+     * @return true|array Si la validación es successful, retorna true.
+     *                    En caso contrario, se retorna un array con detalles del error producido.
+     *
+     * @throws errores si algún parámetro no es del tipo esperado.
+     *
+     * Ejemplo de uso:
+     *
+     *      valida_campo_filtro("nombre", "nombre_filtro", array("nombre_filtro" => array("operador" => "igual", "valor" => "Juan")))
+     *
+     * Los posibles errores que retorna son:
+     * - Error campo_filtro esta vacio.
+     * - Error campo esta vacio.
+     * - Error no existe $filtro[campo_filtro].
+     * - Error no es un array $filtro[campo_filtro].
+     * - Error no existe $filtro[campo_filtro][operador].
+     * - Error no existe $filtro[campo_filtro][valor].
+     * - Error esta vacio $filtro[campo_filtro][operador].
+     * @version 16.160.0
+     */
+    private function valida_campo_filtro(string $campo, string $campo_filtro, array $filtro): true|array
+    {
+        $campo_filtro = trim($campo_filtro);
+        if($campo_filtro === ''){
+            return $this->error->error(mensaje:'Error campo_filtro esta vacio',  data:$campo_filtro, es_final: true);
+        }
+        $campo = trim($campo);
+        if($campo === ''){
+            return $this->error->error(mensaje:'Error campo esta vacio',  data:$campo, es_final: true);
+        }
+        if(!isset($filtro[$campo_filtro])){
+            return $this->error->error(mensaje:'Error no existe $filtro['.$campo_filtro.']',  data:$campo,
+                es_final: true);
+        }
+        if(!is_array($filtro[$campo_filtro])){
+            return $this->error->error(mensaje:'Error no es un array $filtro['.$campo_filtro.']',  data:$campo,
+                es_final: true);
+        }
+        if(!isset($filtro[$campo_filtro]['operador'])){
+            return $this->error->error(mensaje:'Error no existe $filtro['.$campo_filtro.'][operador]',  data:$campo,
+                es_final: true);
+        }
+        if(!isset($filtro[$campo_filtro]['valor'])){
+            return $this->error->error(mensaje:'Error no existe $filtro['.$campo_filtro.'][valor]',  data:$campo,
+                es_final: true);
+        }
+        if(trim(($filtro[$campo_filtro]['operador'])) === ''){
+            return $this->error->error(mensaje:'Error esta vacio $filtro['.$campo_filtro.'][operador]',  data:$campo,
+                es_final: true);
+        }
+        return true;
     }
 
     /**
