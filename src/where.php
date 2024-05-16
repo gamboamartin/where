@@ -533,7 +533,7 @@ class where
      * @throws errores si hay algún problema con los filtros o columnas proporcionados.
      * @version 16.100.0
      */
-    private function genera_and(array $columnas_extra, array $filtro):array|string{
+    final public function genera_and(array $columnas_extra, array $filtro):array|string{
         $sentencia = '';
         foreach ($filtro as $key => $data) {
             if(is_numeric($key)){
