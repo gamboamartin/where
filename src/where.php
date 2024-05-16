@@ -1,14 +1,18 @@
 <?php
 namespace gamboamartin\src;
 use gamboamartin\errores\errores;
+use gamboamartin\validacion\validacion;
 use stdClass;
 
 class where
 {
     private errores $error;
+    private validacion $validacion;
+
     public function __construct()
     {
         $this->error = new errores();
+        $this->validacion = new validacion();
     }
 
     /**
@@ -18,7 +22,7 @@ class where
      * @return string Devuelve el texto original con ' AND ' agregado si el texto original no estaba vacío,
      * de lo contrario, devuelve el texto original.
      */
-    final public function and_filtro_fecha(string $txt): string
+    private function and_filtro_fecha(string $txt): string
     {
         $and = '';
         if($txt !== ''){
@@ -205,6 +209,43 @@ class where
 
     /**
      * POR DOCUMENTAR EN WIKI FINAL REV
+     * Función privada que genera una condición BETWEEN para una consulta SQL.
+     *
+     * @param string $campo El nombre del campo en el que se aplicará la condición.
+     * @param array $filtro Un array asociativo que debe contener los elementos 'valor1' y 'valor2'
+     * los cuales delimitarán el rango de la condición BETWEEN.
+     * @param bool $valor_campo Indica si el valor de $campo debe ser tratado como un string
+     *        (si $valor_campo es true, se añaden comillas simples alrededor del nombre del campo).
+     *
+     * @return string|array Retorna la condición BETWEEN como un string si todo está correcto.
+     *        En caso contrario, si $campo está vacío o $filtro no contiene los elementos 'valor1' y 'valor2',
+     * retorna un error.
+     * @version 16.232.0
+     */
+    private function condicion_entre(string $campo, array $filtro, bool $valor_campo): string|array
+    {
+        $campo = trim($campo);
+        if($campo === ''){
+            return $this->error->error(mensaje: 'Error campo vacío', data: $campo, es_final: true);
+        }
+        if(!isset($filtro['valor1'])){
+            return $this->error->error(mensaje: 'Error campo vacío $filtro[valor1]', data: $campo, es_final: true);
+        }
+        if(!isset($filtro['valor2'])){
+            return $this->error->error(mensaje: 'Error campo vacío $filtro[valor2]', data: $campo, es_final: true);
+        }
+        $condicion = $campo . ' BETWEEN ' ."'" .$filtro['valor1'] . "'"." AND "."'".$filtro['valor2'] . "'";
+
+        if($valor_campo){
+            $condicion = "'".$campo."'" . ' BETWEEN '  .$filtro['valor1'] ." AND ".$filtro['valor2'];
+        }
+
+        return $condicion;
+
+    }
+
+    /**
+     * POR DOCUMENTAR EN WIKI FINAL REV
      * Genera una consulta SQL a partir de los parámetros proporcionados.
      *
      * @param string $campo Campo de la consulta SQL.
@@ -307,6 +348,69 @@ class where
     }
 
     /**
+     * POR DOCUMENTAR EN WIKI FINAL REV
+     *
+     * Devuelve un conjunto de condiciones de tipo BETWEEN en forma de sql
+     *
+     * @param array $filtro_rango
+     *                  Opcion1.- Debe ser un array con la siguiente forma array('valor1'=>'valor','valor2'=>'valor')
+     *                  Opcion2.-
+     *                      Debe ser un array con la siguiente forma
+     *                          array('valor1'=>'valor','valor2'=>'valor','valor_campo'=>true)
+     * @example
+     *      $entrada = array();
+     *      $resultado = filtro_rango_sql($entrada)
+     *      //return = string ''
+     *      $entrada['x'] = array('''valor1'=>'1','valor2=>2);
+     *      $resultado = filtro_rango_sql($entrada)
+     *      //return string x = BETWEEN '1' AND '2'
+     *      $entrada['x'] = array('''valor1'=>'1','valor2=>2,'valor_campo'=>true);
+     *      $resultado = filtro_rango_sql($entrada)
+     *      //return string 'x' = BETWEEN 1 AND 2
+     *      $entrada['x'] = array('''valor1'=>'1','valor2=>2,'valor_campo'=>true);
+     *      $entrada['y'] = array('''valor1'=>'2','valor2=>3,'valor_campo'=>false);
+     *      $entrada['z'] = array('''valor1'=>'4','valor2=>5);
+     *      $resultado = filtro_rango_sql($entrada)
+     *      //return string 'x' = BETWEEN 1 AND 2 AND y BETWEEN 2 AND 3 AND z BETWEEN 4 AND 5
+     * @return array|string
+     * @throws errores Si $filtro_rango[0] != array
+     * @throws errores Si filtro[0] = array('valor1'=>'1') Debe existir valor2
+     * @throws errores Si filtro[0] = array('valor2'=>'1') Debe existir valor1
+     * @throws errores Si filtro[0] = array('valor1'=>'1','valor2'=>'2') key debe ser tabla.campo error sql
+     * @version 16.236.0
+     */
+    final public function filtro_rango_sql(array $filtro_rango):array|string{
+        $filtro_rango_sql = '';
+        foreach ($filtro_rango as $campo=>$filtro){
+            if(!is_array($filtro)){
+                return  $this->error->error(mensaje: 'Error $filtro debe ser un array',data: $filtro, es_final: true);
+            }
+            if(!isset($filtro['valor1'])){
+                return  $this->error->error(mensaje:'Error $filtro[valor1] debe existir',data:$filtro, es_final: true);
+            }
+            if(!isset($filtro['valor2'])){
+                return  $this->error->error(mensaje:'Error $filtro[valor2] debe existir',data:$filtro, es_final: true);
+            }
+            $campo = trim($campo);
+            if(is_numeric($campo)){
+                return  $this->error->error(mensaje:'Error campo debe ser un string',data:$campo, es_final: true);
+            }
+            $valor_campo = false;
+
+            if(isset($filtro['valor_campo']) && $filtro['valor_campo']){
+                $valor_campo = true;
+            }
+            $filtro_rango_sql = $this->genera_filtro_rango_base(campo: $campo,filtro: $filtro,
+                filtro_rango_sql: $filtro_rango_sql,valor_campo: $valor_campo);
+            if(errores::$error){
+                return  $this->error->error(mensaje:'Error $filtro_rango_sql al generar',data:$filtro_rango_sql);
+            }
+        }
+
+        return $filtro_rango_sql;
+    }
+
+    /**
      * POR DOCUMENTAR WIKI FINAL REV
      * Esta función genera una cadena de declaración SQL AND basada en los filtros y columnas extras proporcionados.
      *
@@ -405,6 +509,102 @@ class where
 
         return $sentencia;
 
+    }
+
+    /**
+     * POR DOCUMENTAR EN WIKI FINAL REV
+     * Devuelve una condicion en forma de sql validando si se tiene que precragar un AND o solo la sentencia
+     * @param string $campo
+     *                  Opcion 1.-Si valor_es_campo = false,
+     *                      El valor definido debe ser un campo de la base de datos con la siguiente forma tabla.campo
+     *                  Opcion 2.-Si valor_es_campo = true,
+     *                      El valor definido debe ser un valor del registro del rango a buscar
+     *
+     * @param array $filtro Debe ser un array con la siguiente forma array('valor1'=>'valor','valor2'=>'valor')
+     * @param string $filtro_rango_sql debe ser un sql con una condicion
+     * @param bool $valor_campo
+     *                  Opcion1.- true, Es utilizado para definir el campo para una comparacion como valor
+     *                  Opcion2.- false, Es utilizado para definir el campo a comparar el rango de valores
+     * @example
+     *      $resultado = genera_filtro_rango_base('',array(),'');
+     *      //return = array errores
+     *      $resultado = genera_filtro_rango_base('x',array(),'');
+     *      //return = array errores
+     *      $resultado = genera_filtro_rango_base('x',array('valor1'=>x,'valor2'=>'y'),'');
+     *      //return = string 'x BETWEEN 'x' AND 'y' ;
+     *      $resultado = genera_filtro_rango_base('x',array('valor1'=>x,'valor2'=>'y'),'tabla.campo = 1');
+     *      //return = string tabla.campo = 1 AND  x BETWEEN 'x' AND 'y' ;
+     *      $resultado = genera_filtro_rango_base('x',array('valor1'=>x,'valor2'=>'y'),'tabla.campo = 1',true);
+     *      //return = string tabla.campo = 1 AND  'x' BETWEEN x AND y ;
+     * @return array|string
+     * @throws errores Si $campo = vacio
+     * @throws errores Si filtro[valor1] = vacio
+     * @throws errores Si filtro[valor2] = vacio
+     * @version 16.233.0
+     */
+    private function genera_filtro_rango_base(string $campo, array $filtro, string $filtro_rango_sql,
+                                              bool $valor_campo = false):array|string{
+        $campo = trim($campo);
+        if($campo === ''){
+            return  $this->error->error(mensaje: 'Error $campo no puede venir vacio',data: $campo, es_final: true);
+        }
+        $keys = array('valor1','valor2');
+        $valida = $this->validacion->valida_existencia_keys(keys:$keys, registro: $filtro);
+        if(errores::$error){
+            return  $this->error->error(mensaje: 'Error al validar filtro',data: $valida);
+        }
+
+        $condicion = $this->condicion_entre(campo: $campo,filtro:  $filtro,valor_campo:  $valor_campo);
+        if(errores::$error){
+            return  $this->error->error(mensaje: 'Error al generar condicion',data: $condicion);
+        }
+
+        $filtro_rango_sql_r = $this->setea_filtro_rango(condicion: $condicion, filtro_rango_sql: $filtro_rango_sql);
+        if(errores::$error){
+            return $this->error->error(mensaje: 'Error $filtro_rango_sql al setear',data: $filtro_rango_sql_r);
+        }
+
+        return $filtro_rango_sql_r;
+    }
+
+    /**
+     * POR DOCUMENTAR EN WIKI FINAL REV
+     * Devuelve una condicion en forma de sql validando si se tiene que precragar un AND o solo la sentencia
+     * @access public
+     * @param string $filtro_rango_sql debe ser un sql con una condicion
+     * @param string $condicion debe ser un sql con una condicion
+     * @example
+     *      $filtro = setea_filtro_rango('','');
+     *      //return = string ''
+     *      $filtro = setea_filtro_rango('var1 = 1','');
+     *      //return = array errores
+     *      $filtro = setea_filtro_rango('var1 = 1','var2 = 2');
+     *      //return = string 'var1 = 1 AND var2 = 2'
+     *      $filtro = setea_filtro_rango('','var2 = 2');
+     *      //return = string 'var2 = 2'
+     * @return array|string
+     * @throws errores Si $filtro_rango_sql es diferente de vacio y condicion es igual a vacio
+     * @version 16.226.0
+     */
+    private function setea_filtro_rango(string $condicion, string $filtro_rango_sql):array|string{
+        $filtro_rango_sql = trim($filtro_rango_sql);
+        $condicion = trim($condicion);
+
+        if(trim($filtro_rango_sql) !=='' && trim($condicion) === ''){
+
+            return  $this->error->error(mensaje: 'Error if filtro_rango tiene info $condicion no puede venir vacio',
+                data: $filtro_rango_sql, es_final: true);
+        }
+
+        $and = $this->and_filtro_fecha(txt: $filtro_rango_sql);
+        if(errores::$error){
+            return $this->error->error(mensaje:'error al integrar and ',data: $and);
+        }
+
+
+        $filtro_rango_sql.= $and.$condicion;
+
+        return $filtro_rango_sql;
     }
 
     /**

@@ -259,6 +259,27 @@ class whereTest extends test {
 
     }
 
+    public function test_condicion_entre(){
+
+        errores::$error = false;
+        $wh = new where();
+        $wh = new liberator($wh);
+        $valor_campo = true;
+        $filtro = array();
+        $filtro['valor1'] = 'a';
+        $filtro['valor2'] = 'a';
+        $campo = 'campo';
+        $resultado = $wh->condicion_entre($campo, $filtro, $valor_campo);
+        //print_r($resultado);exit;
+        $this->assertIsString($resultado);
+        $this->assertNotTrue(errores::$error);
+        $this->assertEquals("'campo' BETWEEN a AND a", $resultado);
+
+        errores::$error = false;
+
+
+    }
+
     public function test_data_sql(){
         errores::$error = false;
         $wh = new where();
@@ -344,6 +365,57 @@ class whereTest extends test {
         errores::$error = false;
     }
 
+    public function test_filtro_rango_sql(): void
+    {
+        errores::$error = false;
+        $wh = new where();
+        $wh = new liberator($wh);
+
+        $filtro_rango = array();
+        $resultado = $wh->filtro_rango_sql($filtro_rango);
+        $this->assertIsString($resultado);
+        $this->assertNotTrue(errores::$error);
+
+        errores::$error = false;
+
+        $filtro_rango = array();
+        $filtro_rango[] = '';
+        $resultado = $wh->filtro_rango_sql($filtro_rango);
+        $this->assertIsArray($resultado);
+        $this->assertTrue(errores::$error);
+        $this->assertStringContainsStringIgnoringCase('Error $filtro debe ser un array', $resultado['mensaje']);
+
+        errores::$error = false;
+
+        $filtro_rango = array();
+        $filtro_rango[] = array();
+        $resultado = $wh->filtro_rango_sql($filtro_rango);
+        $this->assertIsArray($resultado);
+        $this->assertTrue(errores::$error);
+        $this->assertStringContainsStringIgnoringCase('Error $filtro[valor1] debe existir', $resultado['mensaje']);
+
+        errores::$error = false;
+
+        $filtro_rango = array();
+        $filtro_rango[0]['valor1'] = 1;
+        $filtro_rango[0]['valor2'] = 1;
+        $resultado = $wh->filtro_rango_sql($filtro_rango);
+        $this->assertIsArray($resultado);
+        $this->assertTrue(errores::$error);
+        $this->assertStringContainsStringIgnoringCase('Error campo debe ser un string', $resultado['mensaje']);
+
+        errores::$error = false;
+
+        $filtro_rango = array();
+        $filtro_rango['a']['valor1'] = 1;
+        $filtro_rango['a']['valor2'] = 1;
+        $resultado = $wh->filtro_rango_sql($filtro_rango);
+        $this->assertIsString($resultado);
+        $this->assertNotTrue(errores::$error);
+        $this->assertEquals("a BETWEEN '1' AND '1'", $resultado);
+        errores::$error = false;
+    }
+
     public function test_genera_and(){
 
         errores::$error = false;
@@ -389,6 +461,59 @@ class whereTest extends test {
         $this->assertIsString($resultado);
         $this->assertNotTrue(errores::$error);
         $this->assertEquals( "", $resultado);
+        errores::$error = false;
+    }
+
+    public function test_genera_filtro_rango_base(){
+        errores::$error = false;
+        $wh = new where();
+        $wh = new liberator($wh);
+
+
+        $campo = '';
+        $filtro_rango_sql = 'a';
+        $filtro = array();
+        $resultado = $wh->genera_filtro_rango_base($campo, $filtro, $filtro_rango_sql);
+        $this->assertIsArray($resultado);
+        $this->assertTrue(errores::$error);
+        $this->assertStringContainsStringIgnoringCase( 'Error $campo no puede venir vacio', $resultado['mensaje']);
+
+        errores::$error = false;
+        $campo = 'a';
+        $filtro_rango_sql = 'a';
+        $filtro = array();
+        $filtro['valor1'] = 1;
+        $filtro['valor2'] = 1;
+        $resultado = $wh->genera_filtro_rango_base($campo, $filtro, $filtro_rango_sql);
+        $this->assertIsString($resultado);
+        $this->assertNotTrue(errores::$error);
+        $this->assertEquals( "a AND a BETWEEN '1' AND '1'", $resultado);
+        errores::$error = false;
+    }
+
+    public function test_setea_filtro_rango(){
+        errores::$error = false;
+        $wh = new where();
+        $wh = new liberator($wh);
+
+
+        $condicion = '';
+        $filtro_rango_sql = 'a';
+        $resultado = $wh->setea_filtro_rango($condicion, $filtro_rango_sql);
+
+
+        $this->assertIsArray( $resultado);
+        $this->assertTrue(errores::$error);
+        $this->assertStringContainsStringIgnoringCase('Error if filtro_rango tiene info $condicion no puede venir vacio', $resultado['mensaje']);
+
+        errores::$error = false;
+
+        $condicion = 'z';
+        $filtro_rango_sql = 'a';
+        $resultado = $wh->setea_filtro_rango($condicion, $filtro_rango_sql);
+        $this->assertIsString( $resultado);
+        $this->assertNotTrue(errores::$error);
+        $this->assertEquals('a AND z', $resultado);
         errores::$error = false;
     }
 
