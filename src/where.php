@@ -22,7 +22,7 @@ class where
      * @return string Devuelve el texto original con ' AND ' agregado si el texto original no estaba vacío,
      * de lo contrario, devuelve el texto original.
      */
-    private function and_filtro_fecha(string $txt): string
+    final public function and_filtro_fecha(string $txt): string
     {
         $and = '';
         if($txt !== ''){
