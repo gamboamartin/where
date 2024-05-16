@@ -11,7 +11,7 @@
   ],
     "autoload": {
         "psr-4": {
-            "gamboamartin\\src\\": "src",
+            "gamboamartin\\where\\": "src",
             "gamboamartin\\tests\\": "tests",
             "config\\": "config/"
         }

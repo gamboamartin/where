@@ -1,6 +1,8 @@
 <?php
-namespace gamboamartin\src;
+namespace gamboamartin\where;
 use gamboamartin\errores\errores;
+use gamboamartin\src\sql;
+use gamboamartin\src\validaciones;
 use gamboamartin\validacion\validacion;
 use stdClass;
 
@@ -294,7 +296,7 @@ class where
      *
      * @version 16.259.1
      */
-    final public function data_in(array $in): array|stdClass
+    private function data_in(array $in): array|stdClass
     {
         $keys = array('llave','values');
         $valida = $this->validacion->valida_existencia_keys( keys:$keys, registro: $in);
@@ -980,6 +982,54 @@ class where
 
         return $filtro_rango_sql_r;
     }
+
+    /**
+     * POR DOCUMENTAR EN WIKI FINAL REV
+     * Genera una cadena SQL para la cláusula IN en una consulta SQL.
+     *
+     * Esta función toma un array asociativo $in que debe tener las claves:
+     * - 'llave': representa el nombre de columna en la cláusula SQL IN
+     * - 'values': un array de valores para la cláusula SQL IN
+     *
+     * Luego realiza las siguientes operaciones:
+     * 1. Valida la existencia de las claves 'llave' y 'values' en el array proporcionado. Si algún de los claves no existe, retorna un error.
+     * 2. Genera los datos `$data_in` basados en el array dado. Si ocurre un error mientras se genera `$data_in`, retorna un error.
+     * 3. Genera la cadena SQL para la cláusula IN basado en `$data_in`. Si ocurre un error mientras se genera la cláusula SQL IN, retorna un error.
+     * 4. Si todos los pasos anteriores se completan con éxito, retorna la cadena SQL para la cláusula IN.
+     *
+     * @param array $in  'llave': string, 'values': array } Array asociativo con las claves 'llave' y 'values'
+     * @return string|array Retorna una cadena SQL para la cláusula IN si no hubo errores. En caso de error, devuelve un array que describe el error.
+     *
+     * @example genera_in(['llave' => 'id', 'values' => [1, 2, 3]]) retorna 'id IN (1,2,3)'
+     *
+     * @version 16.293.1
+     */
+    private function genera_in(array $in): array|string
+    {
+        $keys = array('llave','values');
+        $valida = $this->validacion->valida_existencia_keys( keys:$keys, registro: $in);
+        if(errores::$error){
+            return $this->error->error(mensaje: 'Error al validar not_in',data: $valida);
+        }
+        $values = $in['values'];
+
+        if(!is_array($values)){
+            return $this->error->error(mensaje: 'Error values debe ser un array',data: $values, es_final: true);
+        }
+
+        $data_in = $this->data_in(in: $in);
+        if(errores::$error){
+            return $this->error->error(mensaje: 'Error al generar data in',data: $data_in);
+        }
+
+
+        $in_sql = $this->in_sql(llave:  $data_in->llave, values:$data_in->values);
+        if(errores::$error){
+            return $this->error->error(mensaje: 'Error al generar sql',data: $in_sql);
+        }
+        return $in_sql;
+    }
+
 
 
 

@@ -1,9 +1,9 @@
 <?php
 
 use gamboamartin\errores\errores;
-use gamboamartin\src\where;
 use gamboamartin\test\liberator;
 use gamboamartin\test\test;
+use gamboamartin\where\where;
 
 
 class whereTest extends test {
@@ -741,6 +741,22 @@ class whereTest extends test {
         $this->assertIsString($resultado);
         $this->assertNotTrue(errores::$error);
         $this->assertEquals( "a AND a BETWEEN '1' AND '1'", $resultado);
+        errores::$error = false;
+    }
+
+    public function test_genera_in(){
+        errores::$error = false;
+        $wh = new where();
+        $wh = new liberator($wh);
+
+
+        $in = array();
+        $in['llave'] = 'a';
+        $in['values'] = array('z');
+        $resultado = $wh->genera_in($in);
+        $this->assertIsString($resultado);
+        $this->assertNotTrue(errores::$error);
+        $this->assertEquals("a IN ('z')",$resultado);
         errores::$error = false;
     }
 
