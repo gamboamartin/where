@@ -533,7 +533,7 @@ class where
      * @throws errores si hay algún problema con los filtros o columnas proporcionados.
      * @version 16.100.0
      */
-    final public function genera_and(array $columnas_extra, array $filtro):array|string{
+    private function genera_and(array $columnas_extra, array $filtro):array|string{
         $sentencia = '';
         foreach ($filtro as $key => $data) {
             if(is_numeric($key)){
@@ -585,7 +585,7 @@ class where
      * Nota: El operador predeterminado es 'LIKE'.
      * @version 16.101.0
      */
-    final public function genera_and_textos(array $columnas_extra, array $filtro):array|string{
+    private function genera_and_textos(array $columnas_extra, array $filtro):array|string{
 
         $sentencia = '';
         foreach ($filtro as $key => $data) {
@@ -675,6 +675,41 @@ class where
         }
 
         return $filtro_rango_sql_r;
+    }
+
+    /**
+     * POR DOCUMENTAR EN WIKI FINAL REV
+     * Genera la sentencia SQL base de filtro según el tipo de filtro
+     * proporcionado (numeros o textos).
+     *
+     * @param array $columnas_extra Array de columnas adicionales para incluir en la consulta.
+     * @param array $filtro Array de condiciones para ser incluidos en la cláusula WHERE de la sentencia.
+     * @param string $tipo_filtro Define el tipo del filtro. Puede ser "numeros" o "textos".
+     *
+     * @return array|string Retorna la sentencia generada o un string describiendo un error si sucede alguno.
+     *
+     * @throws errores si el tipo de filtro no es válido.
+     * @version 16.102.0
+     */
+    private function genera_sentencia_base(array $columnas_extra,  array $filtro, string $tipo_filtro):array|string{
+        $verifica_tf = $this->verifica_tipo_filtro(tipo_filtro: $tipo_filtro);
+        if(errores::$error){
+            return $this->error->error(mensaje: 'Error al validar tipo_filtro',data: $verifica_tf);
+        }
+        $sentencia = '';
+        if($tipo_filtro === 'numeros') {
+            $sentencia = $this->genera_and(columnas_extra: $columnas_extra, filtro: $filtro);
+            if(errores::$error){
+                return $this->error->error(mensaje: "Error en and",data:$sentencia);
+            }
+        }
+        elseif ($tipo_filtro==='textos'){
+            $sentencia = $this->genera_and_textos(columnas_extra: $columnas_extra,filtro: $filtro);
+            if(errores::$error){
+                return $this->error->error(mensaje: "Error en texto",data:$sentencia);
+            }
+        }
+        return $sentencia;
     }
 
     /**
@@ -953,6 +988,43 @@ class where
             $value = '';
         }
         return addslashes($value);
+    }
+
+    /**
+     * TOTAL
+     * Verifica el tipo de filtro proporcionado.
+     *
+     * @param string $tipo_filtro El tipo de filtro a verificar.
+     * @return true|array Devuelve true si el tipo de filtro es correcto,
+     *         si no, devuelve un array con un error.
+     *
+     * La función realiza las siguientes acciones:
+     * 1. Limpia el tipo de filtro ingresado.
+     * 2. Si el tipo de filtro es una cadena vacía, se establece como 'numeros'.
+     * 3. Define los tipos permitidos de filtro como 'numeros' y 'textos'.
+     * 4. Verifica si el tipo de filtro ingresado pertenece a los tipos permitidos.
+     *    Si no es así, crea un nuevo objeto stdClass y establece la propiedad
+     *    tipo_filtro con el valor ingresado y retorna un error con el mensaje y los datos correspondientes.
+     * @version 13.8.0
+     * @url https://github.com/gamboamartin/where/wiki/src.where.verifica_tipo_filtro
+     */
+    final public function verifica_tipo_filtro(string $tipo_filtro): true|array
+    {
+        $tipo_filtro = trim($tipo_filtro);
+        if($tipo_filtro === ''){
+            $tipo_filtro = 'numeros';
+        }
+        $tipos_permitidos = array('numeros','textos');
+        if(!in_array($tipo_filtro,$tipos_permitidos)){
+
+            $params = new stdClass();
+            $params->tipo_filtro = $tipo_filtro;
+
+            return $this->error->error(
+                mensaje: 'Error el tipo filtro no es correcto los filtros pueden ser o numeros o textos',
+                data: $params, es_final: true);
+        }
+        return true;
     }
 
 }
