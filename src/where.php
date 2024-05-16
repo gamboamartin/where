@@ -294,7 +294,7 @@ class where
      *
      * @version 16.259.1
      */
-    private function data_in(array $in): array|stdClass
+    final public function data_in(array $in): array|stdClass
     {
         $keys = array('llave','values');
         $valida = $this->validacion->valida_existencia_keys( keys:$keys, registro: $in);
@@ -1125,7 +1125,7 @@ class where
      *
      * @version 16.278.1
      */
-    private function genera_not_in_sql(array $not_in): array|string
+    final public function genera_not_in_sql(array $not_in): array|string
     {
         $not_in_sql = '';
         if(count($not_in)>0){
@@ -1434,7 +1434,7 @@ class where
      * o un mensaje de error si se encuentra algún problema.
      * @version 16.262.1
      */
-    private function values_sql_in(array $values): string|array
+    final public function values_sql_in(array $values): string|array
     {
         $values_sql = '';
         foreach ($values as $value){
