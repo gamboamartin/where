@@ -812,6 +812,43 @@ class whereTest extends test {
         errores::$error = false;
     }
 
+    public function test_maqueta_filtro_especial(): void
+    {
+        errores::$error = false;
+        $wh = new where();
+        $wh = new liberator($wh);
+
+        $campo = '';
+        $filtro = array();
+        $resultado = $wh->maqueta_filtro_especial($campo, array(), $filtro);
+        $this->assertIsArray($resultado);
+        $this->assertTrue(errores::$error);
+        $this->assertStringContainsStringIgnoringCase( "Error al validar filtro", $resultado['mensaje']);
+
+        errores::$error = false;
+
+        $campo = 'a';
+        $filtro = array();
+        $filtro['a']['operador'] = 'b';
+        $resultado = $wh->maqueta_filtro_especial($campo, array() ,$filtro);
+        $this->assertIsArray($resultado);
+        $this->assertTrue(errores::$error);
+        $this->assertStringContainsStringIgnoringCase( "Error al validar filtro", $resultado['mensaje']);
+
+        errores::$error = false;
+
+        $campo = 'a';
+        $filtro = array();
+        $filtro['a']['operador'] = 'b';
+        $filtro['a']['valor'] = 'b';
+        $resultado = $wh->maqueta_filtro_especial($campo, array(), $filtro);
+        $this->assertIsString($resultado);
+        $this->assertNotTrue(errores::$error);
+        $this->assertStringContainsStringIgnoringCase( "a b 'b'", $resultado);
+
+        errores::$error = false;
+    }
+
     public function test_not_in_sql(){
         errores::$error = false;
         $wh = new where();

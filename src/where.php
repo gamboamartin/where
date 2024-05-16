@@ -122,14 +122,14 @@ class where
      * @throws errores Puede lanzar una excepción si el campo proporcionado es una subconsulta incorrecta.
      * @version 16.145.0
      */
-    final public function campo_filtro_especial(string $campo, array $columnas_extra): array|string
+    private function campo_filtro_especial(string $campo, array $columnas_extra): array|string
     {
         $campo = trim($campo);
         if($campo === ''){
             return $this->error->error(mensaje:'Error campo esta vacio',  data:$campo, es_final: true);
         }
 
-        $es_subquery = (new \gamboamartin\src\where())->es_subquery(campo: $campo,columnas_extra:  $columnas_extra);
+        $es_subquery = $this->es_subquery(campo: $campo,columnas_extra:  $columnas_extra);
         if(errores::$error){
             return $this->error->error(mensaje:'Error al subquery bool',  data:$es_subquery);
         }
@@ -326,7 +326,7 @@ class where
      * @throws errores Error al validar datos o generar la consulta SQL.
      * @version 16.163.0
      */
-    final public function data_sql(string $campo, string $campo_filtro, array $filtro): array|string
+    private function data_sql(string $campo, string $campo_filtro, array $filtro): array|string
     {
         $valida = $this->valida_campo_filtro(campo: $campo,campo_filtro:  $campo_filtro,filtro:  $filtro);
         if(errores::$error){
@@ -485,7 +485,7 @@ class where
      * @return bool|array Retorna verdadero si el campo es un subquery, en caso contrario retorna falso.
      *  En el caso de que el campo esté vacío, se retorna un error.
      */
-    final public function es_subquery(string $campo, array $columnas_extra): bool|array
+    private function es_subquery(string $campo, array $columnas_extra): bool|array
     {
         $campo = trim($campo);
         if($campo === ''){
@@ -1184,6 +1184,63 @@ class where
             return $this->error->error(mensaje:'Error al obtener sql',data:$sql);
         }
         return $sql;
+    }
+
+    /**
+     * POR DOCUMENTAR EN WIKI FINAL REV
+     *
+     * Genera la condicion sql de un filtro especial
+     *
+     * @param string $campo campo de una tabla tabla.campo
+     * @param array $columnas_extra Campos en forma de subquery del modelo
+     * @param array $filtro filtro a validar
+     *
+     * @return array|string
+     *
+     * @example
+     *      Ej 1
+     *      $campo = 'x';
+     *      $filtro['x'] = array('operador'=>'x','valor'=>'x');
+     *      $resultado = maqueta_filtro_especial($campo, $filtro);
+     *      $resultado = x>'x'
+     *
+     *      Ej 2
+     *      $campo = 'x';
+     *      $filtro['x'] = array('operador'=>'x','valor'=>'x','es_campo'=>true);
+     *      $resultado = maqueta_filtro_especial($campo, $filtro);
+     *      $resultado = 'x'> x
+     *
+     * @version 16.164.0
+     */
+    private function maqueta_filtro_especial(string $campo, array $columnas_extra, array $filtro):array|string{
+        $campo = trim($campo);
+
+        $valida = (new validaciones())->valida_data_filtro_especial(campo: $campo,filtro:  $filtro);
+        if(errores::$error){
+            return $this->error->error(mensaje: 'Error al validar filtro', data: $valida);
+        }
+
+        $keys = array('valor');
+        $valida = $this->validacion->valida_existencia_keys(keys: $keys, registro: $filtro[$campo]);
+        if(errores::$error){
+            return $this->error->error(mensaje:'Error al validar filtro',  data:$valida);
+        }
+
+
+        $campo_filtro = $campo;
+
+        $campo = $this->campo_filtro_especial(campo: $campo,columnas_extra:  $columnas_extra);
+        if(errores::$error){
+            return $this->error->error(mensaje:'Error al obtener campo',  data:$campo);
+        }
+
+        $data_sql = $this->data_sql(campo: $campo,campo_filtro:  $campo_filtro,filtro:  $filtro);
+        if(errores::$error){
+            return $this->error->error(mensaje:'Error al genera sql',  data:$data_sql);
+        }
+
+
+        return $data_sql;
     }
 
     /**
