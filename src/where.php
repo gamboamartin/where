@@ -586,7 +586,7 @@ class where
      * @throws errores Si $filtro_rango_sql es diferente de vacio y condicion es igual a vacio
      * @version 16.226.0
      */
-    private function setea_filtro_rango(string $condicion, string $filtro_rango_sql):array|string{
+    final public function setea_filtro_rango(string $condicion, string $filtro_rango_sql):array|string{
         $filtro_rango_sql = trim($filtro_rango_sql);
         $condicion = trim($condicion);
 
