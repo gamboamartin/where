@@ -500,6 +500,61 @@ class where
     }
 
     /**
+     *
+     * POR DOCUMENTAR EN WIKI FINAL REV
+     * Genera las condiciones sql de un filtro especial
+     * @param array $columnas_extra Conjunto de columnas en forma de subquery
+     * @param array $filtro_especial //arreglo con las condiciones $filtro_especial[0][tabla.campo]= array('operador'=>'<','valor'=>'x')
+     *
+     * @return array|string
+     * @example
+     *      Ej 1
+     *      $filtro_especial[0][tabla.campo]['operador'] = '>';
+     *      $filtro_especial[0][tabla.campo]['valor'] = 'x';
+     *
+     *      $resultado = filtro_especial_sql($filtro_especial);
+     *      $resultado =  tabla.campo > 'x'
+     *
+     *      Ej 2
+     *      $filtro_especial[0][tabla.campo]['operador'] = '<';
+     *      $filtro_especial[0][tabla.campo]['valor'] = 'x';
+     *
+     *      $resultado = filtro_especial_sql($filtro_especial);
+     *      $resultado =  tabla.campo < 'x'
+     *
+     *      Ej 3
+     *      $filtro_especial[0][tabla.campo]['operador'] = '<';
+     *      $filtro_especial[0][tabla.campo]['valor'] = 'x';
+     *
+     *      $filtro_especial[1][tabla.campo2]['operador'] = '>=';
+     *      $filtro_especial[1][tabla.campo2]['valor'] = 'x';
+     *      $filtro_especial[1][tabla.campo2]['comparacion'] = 'OR ';
+     *
+     *      $resultado = filtro_especial_sql($filtro_especial);
+     *      $resultado =  tabla.campo < 'x' OR tabla.campo2  >= x
+     *
+     * @version 16.204.0
+     */
+    private function filtro_especial_sql(array $columnas_extra, array $filtro_especial):array|string{ //DEBUG
+
+        $filtro_especial_sql = '';
+        foreach ($filtro_especial as $campo=>$filtro_esp){
+            if(!is_array($filtro_esp)){
+
+                return $this->error->error(mensaje: "Error filtro debe ser un array filtro_especial[] = array()",
+                    data: $filtro_esp, es_final: true);
+            }
+
+            $filtro_especial_sql = $this->obten_filtro_especial(columnas_extra: $columnas_extra,
+                filtro_esp: $filtro_esp, filtro_especial_sql: $filtro_especial_sql);
+            if(errores::$error){
+                return $this->error->error(mensaje:"Error filtro", data: $filtro_especial_sql);
+            }
+        }
+        return $filtro_especial_sql;
+    }
+
+    /**
      * POR DOCUMENTAR EN WIKI FINAL REV
      * Funcion que genera las condiciones de sql de un filtro extra
      *
@@ -847,7 +902,7 @@ class where
      * @version 16.182.0
      */
 
-    final public function genera_filtro_especial(string $campo, string $data_sql, array $filtro_esp,
+    private function genera_filtro_especial(string $campo, string $data_sql, array $filtro_esp,
                                             string $filtro_especial_sql):array|string{//FIN //DEBUG
         if($filtro_especial_sql === ''){
             $filtro_especial_sql .= $data_sql;
@@ -1290,6 +1345,55 @@ class where
         }
 
         return $not_in_sql;
+    }
+
+    /**
+     * POR DOCUMENTAR EN WIKI FINAL REV
+     * Genera la condicion sql de un filtro especial
+     * @param array $columnas_extra Conjunto de columnas en forma de subquery
+     * @param array $filtro_esp //array con datos del filtro $filtro_esp[tabla.campo]= array('operador'=>'AND','valor'=>'x');
+     *
+     * @param string $filtro_especial_sql //condicion en forma de sql
+     * @return array|string
+     * @example
+     *      Ej 1
+     *      $filtro_esp[tabla.campo]['operador'] = '>';
+     *      $filtro_esp[tabla.campo]['valor'] = 'x';
+     *      $filtro_especial_sql = '';
+     *      $resultado = obten_filtro_especial($filtro_esp, $filtro_especial_sql);
+     *      $resultado =  tabla.campo > 'x'
+     *
+     *      Ej 2
+     *      $filtro_esp[tabla.campo]['operador'] = '>';
+     *      $filtro_esp[tabla.campo]['valor'] = 'x';
+     *      $filtro_esp[tabla.campo]['comparacion'] = ' AND ';
+     *      $filtro_especial_sql = ' tabla.campo2 = 1';
+     *      $resultado = obten_filtro_especial($filtro_esp, $filtro_especial_sql);
+     *      $resultado =  tabla.campo > 'x' AND tabla.campo2 = 1
+     * @version 16.195.0
+     *
+     */
+
+    private function obten_filtro_especial(
+        array $columnas_extra, array $filtro_esp, string $filtro_especial_sql):array|string{
+        $campo = key($filtro_esp);
+        $campo = trim($campo);
+
+        $valida =(new validaciones())->valida_data_filtro_especial(campo: $campo,filtro:  $filtro_esp);
+        if(errores::$error){
+            return $this->error->error(mensaje: "Error en filtro ", data: $valida);
+        }
+        $data_sql = $this->maqueta_filtro_especial(campo: $campo, columnas_extra: $columnas_extra,filtro: $filtro_esp);
+        if(errores::$error){
+            return $this->error->error(mensaje:"Error filtro", data:$data_sql);
+        }
+        $filtro_especial_sql_r = $this->genera_filtro_especial(campo:  $campo, data_sql: $data_sql,
+            filtro_esp: $filtro_esp, filtro_especial_sql: $filtro_especial_sql);
+        if(errores::$error){
+            return $this->error->error(mensaje:"Error filtro",data: $filtro_especial_sql_r);
+        }
+
+        return $filtro_especial_sql_r;
     }
 
 

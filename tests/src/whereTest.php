@@ -427,6 +427,40 @@ class whereTest extends test {
         errores::$error = false;
     }
 
+    public function test_filtro_especial_sql(){
+        errores::$error = false;
+        $wh = new where();
+        $wh = new liberator($wh);
+
+
+        $filtro_especial = array();
+        $filtro_especial[] = '';
+        $resultado = $wh->filtro_especial_sql(array(),$filtro_especial);
+        $this->assertIsArray($resultado);
+        $this->assertTrue(errores::$error);
+        $this->assertStringContainsStringIgnoringCase('Error filtro debe ser un array filtro_especial[] = array()', $resultado['mensaje']);
+
+        errores::$error = false;
+
+        $filtro_especial = array();
+        $filtro_especial[]['campo'] = array();
+        $resultado = $wh->filtro_especial_sql(array(),$filtro_especial);
+        $this->assertIsArray($resultado);
+        $this->assertTrue(errores::$error);
+        $this->assertStringContainsStringIgnoringCase('Error filtro', $resultado['mensaje']);
+
+        errores::$error = false;
+
+        $filtro_especial = array();
+        $filtro_especial[0]['x']['operador'] = 'x';
+        $filtro_especial[0]['x']['valor'] = 'x';
+        $resultado = $wh->filtro_especial_sql(array(),$filtro_especial);
+        $this->assertIsString($resultado);
+        $this->assertNotTrue(errores::$error);
+        errores::$error = false;
+
+    }
+
     public function test_filtro_extra_sql(): void
     {
         errores::$error = false;
@@ -881,6 +915,32 @@ class whereTest extends test {
         $this->assertIsString($resultado);
         $this->assertNotTrue(errores::$error);
         $this->assertStringContainsStringIgnoringCase( "z NOT IN ('a' ,'b')", $resultado);
+        errores::$error = false;
+    }
+
+    public function test_obten_filtro_especial(){
+        errores::$error = false;
+        $wh = new where();
+        $wh = new liberator($wh);
+
+
+        $filtro_esp = array();
+        $filtro_especial_sql = '';
+        $resultado = $wh->obten_filtro_especial(array(),$filtro_esp, $filtro_especial_sql);
+        $this->assertIsArray( $resultado);
+        $this->assertTrue(errores::$error);
+        $this->assertStringContainsStringIgnoringCase('Error en filtro', $resultado['mensaje']);
+
+        errores::$error = false;
+
+        $filtro_esp = array();
+        $filtro_especial_sql = '';
+        $filtro_esp['x']['operador'] = 'x';
+        $filtro_esp['x']['valor'] = 'x';
+        $resultado = $wh->obten_filtro_especial(array(),$filtro_esp, $filtro_especial_sql);
+        $this->assertIsString($resultado);
+        $this->assertNotTrue(errores::$error);
+
         errores::$error = false;
     }
 
