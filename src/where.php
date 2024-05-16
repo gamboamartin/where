@@ -535,7 +535,7 @@ class where
      *
      * @version 16.204.0
      */
-    private function filtro_especial_sql(array $columnas_extra, array $filtro_especial):array|string{ //DEBUG
+    final public function filtro_especial_sql(array $columnas_extra, array $filtro_especial):array|string{ //DEBUG
 
         $filtro_especial_sql = '';
         foreach ($filtro_especial as $campo=>$filtro_esp){
