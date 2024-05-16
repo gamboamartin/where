@@ -814,7 +814,7 @@ class where
      * @version 16.182.0
      */
 
-    private function genera_filtro_especial(string $campo, string $data_sql, array $filtro_esp,
+    final public function genera_filtro_especial(string $campo, string $data_sql, array $filtro_esp,
                                             string $filtro_especial_sql):array|string{//FIN //DEBUG
         if($filtro_especial_sql === ''){
             $filtro_especial_sql .= $data_sql;
