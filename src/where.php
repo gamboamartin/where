@@ -691,7 +691,7 @@ class where
      * @throws errores si el tipo de filtro no es válido.
      * @version 16.102.0
      */
-    private function genera_sentencia_base(array $columnas_extra,  array $filtro, string $tipo_filtro):array|string{
+    final public function genera_sentencia_base(array $columnas_extra,  array $filtro, string $tipo_filtro):array|string{
         $verifica_tf = $this->verifica_tipo_filtro(tipo_filtro: $tipo_filtro);
         if(errores::$error){
             return $this->error->error(mensaje: 'Error al validar tipo_filtro',data: $verifica_tf);
