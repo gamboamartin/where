@@ -68,6 +68,7 @@ class where
     }
 
     /**
+     * TOTAL
      * Esta función procesa las entradas proporcionadas y devuelve el "campo" apropiado.
      *
      * @param array|string|null $data los datos proporcionados para extraer el campo. Pueden ser de tipos array, string o null.
@@ -75,6 +76,7 @@ class where
      * @return string|array Devuelve el "campo" después de ser procesado y garantiza que no contenga caracteres de escape.
      *
      * @throws errores si la clave proporcionada está vacía.
+     * @url https://github.com/gamboamartin/where/wiki/src.where.campo
      */
     private function campo(array|string|null $data, string $key):string|array{
         if($key === ''){
@@ -162,7 +164,7 @@ class where
     }
 
     /**
-     * POR DOCUMENTAR EN WIKI FINAL REV
+     * TOTAL
      * La función comparacion_pura compara los datos pasados con las columnas extra en base a una llave.
      *
      * @param array $columnas_extra Las columnas extra a considerar en la comparación.
@@ -179,6 +181,7 @@ class where
      * @throws errores Si hay un error al maquetar el campo con los datos y la llave.
      * @throws errores Si hay un error al validar la maquetación.
      * @version 16.99.0
+     * @url https://github.com/gamboamartin/where/wiki/src.where.comparacion_pura
      *
      */
     private function comparacion_pura(array $columnas_extra, array|string|null $data, string $key):array|stdClass{
@@ -1618,7 +1621,7 @@ class where
     }
 
     /**
-     * POR DOCUMENTAR EN WIKI FINAL REV
+     * TOTAL
      * Función privada que procesa los datos de entrada y los limpia para su posterior uso.
      *
      * @param array|string|null $data Datos de entrada para ser procesados.
@@ -1628,6 +1631,7 @@ class where
      *
      * @throws errores en caso de que haya algún error durante el proceso.
      * @version 16.98.0
+     * @url https://github.com/gamboamartin/where/wiki/src.where.value
      */
     private function value(array|string|null $data):string|array{
         $value = $data;
