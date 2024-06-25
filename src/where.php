@@ -126,7 +126,7 @@ class where
      * @throws errores Puede lanzar una excepción si el campo proporcionado es una subconsulta incorrecta.
      * @version 16.145.0
      */
-    private function campo_filtro_especial(string $campo, array $columnas_extra): array|string
+    final public function campo_filtro_especial(string $campo, array $columnas_extra): array|string
     {
         $campo = trim($campo);
         if($campo === ''){
@@ -332,7 +332,7 @@ class where
      * @throws errores Error al validar datos o generar la consulta SQL.
      * @version 16.163.0
      */
-    private function data_sql(string $campo, string $campo_filtro, array $filtro): array|string
+    final public function data_sql(string $campo, string $campo_filtro, array $filtro): array|string
     {
         $valida = $this->valida_campo_filtro(campo: $campo,campo_filtro:  $campo_filtro,filtro:  $filtro);
         if(errores::$error){
