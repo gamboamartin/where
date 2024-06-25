@@ -1700,7 +1700,7 @@ class where
      * o un mensaje de error si se encuentra algún problema.
      * @version 16.262.1
      */
-    private function values_sql_in(array $values): string|array
+    final public function values_sql_in(array $values): string|array
     {
         $values_sql = '';
         foreach ($values as $value){
