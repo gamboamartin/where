@@ -146,7 +146,7 @@ class where
     }
 
     /**
-     * POR DOCUMENTAR EN WIKI FINAL REV
+     * TOTAL
      * Función que realiza una comparación.
      *
      * Esta función toma un array, cadena de texto, o valor null como datos de entrada,
@@ -158,6 +158,7 @@ class where
      * @param string $default La cadena de texto por defecto a retornar si la llave 'comparacion' no se encuentra.
      * @return string El resultado de la comparación, o la cadena por defecto si no hay comparación.
      * @version 16.96.0
+     * @url https://github.com/gamboamartin/where/wiki/src.where.comparacion
      */
     private function comparacion(array|string|null $data, string $default):string{
         return $data['comparacion'] ?? $default;
