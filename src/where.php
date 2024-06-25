@@ -988,7 +988,7 @@ class where
     }
 
     /**
-     * POR DOCUMENTAR EN WIKI FINAL REV
+     * POR DOCUMENTAR EN WIKI FINAL REV GENERAR EN PRIVATE
      * Genera una cadena SQL para la cláusula IN en una consulta SQL.
      *
      * Esta función toma un array asociativo $in que debe tener las claves:
@@ -1008,7 +1008,7 @@ class where
      *
      * @version 16.293.1
      */
-    private function genera_in(array $in): array|string
+    final public function genera_in(array $in): array|string
     {
         $keys = array('llave','values');
         $valida = $this->validacion->valida_existencia_keys( keys:$keys, registro: $in);
