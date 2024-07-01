@@ -764,7 +764,7 @@ class where
     }
 
     /**
-     * POR DOCUMENTAR WIKI FINAL REV
+     * TOTAL
      * Esta función genera una cadena de declaración SQL AND basada en los filtros y columnas extras proporcionados.
      *
      * @param array $columnas_extra Las columnas adicionales que han de considerarse al generar la declaración SQL.
@@ -775,6 +775,7 @@ class where
      *
      * @throws errores si hay algún problema con los filtros o columnas proporcionados.
      * @version 16.100.0
+     * @url https://github.com/gamboamartin/where/wiki/src.where.genera_and
      */
     final public function genera_and(array $columnas_extra, array $filtro):array|string{
         $sentencia = '';
@@ -811,7 +812,7 @@ class where
 
 
     /**
-     * POR DOCUMENTAR EN WIKI FINAL REV
+     * TOTAL
      * Genera y gestiona sentencias AND para operaciones SQL.
      * La función procesa el filtro y las columnas adicionales proporcionadas para generar una sentencia SQL AND.
      *
@@ -829,6 +830,7 @@ class where
      * Esto generará una sentencia SQL AND que puede parecerse a "tabla.campo LIKE '%valor%'".
      * Nota: El operador predeterminado es 'LIKE'.
      * @version 16.101.0
+     * @url https://github.com/gamboamartin/where/wiki/src.where.genera_and_textos
      */
     private function genera_and_textos(array $columnas_extra, array $filtro):array|string{
 
@@ -1038,7 +1040,7 @@ class where
 
 
     /**
-     * POR DOCUMENTAR EN WIKI FINAL REV
+     * TOTAL
      * Genera la sentencia SQL base de filtro según el tipo de filtro
      * proporcionado (numeros o textos).
      *
@@ -1050,6 +1052,7 @@ class where
      *
      * @throws errores si el tipo de filtro no es válido.
      * @version 16.102.0
+     * @url https://github.com/gamboamartin/where/wiki/src.where.genera_sentencia_base
      */
     final public function genera_sentencia_base(array $columnas_extra,  array $filtro, string $tipo_filtro):array|string{
         $verifica_tf = $this->verifica_tipo_filtro(tipo_filtro: $tipo_filtro);

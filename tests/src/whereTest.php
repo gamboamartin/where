@@ -644,7 +644,7 @@ class whereTest extends test {
 
         errores::$error = false;
         $wh = new where();
-        $wh = new liberator($wh);
+        //$wh = new liberator($wh);
         $filtro = array();
         $columnas_extra = array();
         $resultado = $wh->genera_and($columnas_extra, $filtro);
