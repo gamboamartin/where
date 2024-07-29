@@ -113,7 +113,7 @@ class where
     }
 
     /**
-     * POR DOCUMENTAR EN WIKI FINAL REV
+     * TOTAL
      * Esta función valida el campo proporcionado para ser filtrado y verifica si el campo es parte de una subconsulta.
      * Si el campo proporcionado está vacío, se retorna un error.
      * Una verificación adicional se realiza para garantizar si el campo proporcionado pertenece a una subconsulta.
@@ -125,6 +125,7 @@ class where
      *
      * @throws errores Puede lanzar una excepción si el campo proporcionado es una subconsulta incorrecta.
      * @version 16.145.0
+     * @url https://github.com/gamboamartin/where/wiki/src.where.campo_filtro_especial
      */
     final public function campo_filtro_especial(string $campo, array $columnas_extra): array|string
     {
@@ -355,7 +356,7 @@ class where
     }
 
     /**
-     * POR DOCUMENTAR EN WIKI FINAL REV
+     * TOTAL
      * Método para generar una cadena SQL para un filtro base.
      *
      * @param string $campo Nombre del campo en la base de datos.
@@ -366,6 +367,7 @@ class where
      *
      * @throws errores Lanza una excepción en caso de errores.
      * @version 16.152.0
+     * @url https://github.com/gamboamartin/where/wiki/src.where.campo.data_sql_base
      */
     private function data_sql_base(string $campo, string $campo_filtro, array $filtro): string|array
     {
@@ -484,12 +486,14 @@ class where
     }
 
     /**
+     * TOTAL
      * Determina si un campo es un subquery basado en la existencia del campo en las columnas extra.
      *
      * @param string $campo El campo a evaluar si es un subquery.
      * @param array $columnas_extra Las columnas extra donde se va a buscar el campo.
      * @return bool|array Retorna verdadero si el campo es un subquery, en caso contrario retorna falso.
      *  En el caso de que el campo esté vacío, se retorna un error.
+     * @url https://github.com/gamboamartin/where/wiki/src.where.es_subquery
      */
     private function es_subquery(string $campo, array $columnas_extra): bool|array
     {
@@ -1505,7 +1509,7 @@ class where
 
 
     /**
-     * POR DOCUMENTAR EN WIKI FINAL REV
+     * TOTAL
      * Comprueba y valida los valores de un campo y un campo de filtro.
      *
      * @param string $campo Representa el nombre del campo a validar.
@@ -1530,6 +1534,7 @@ class where
      * - Error no existe $filtro[campo_filtro][valor].
      * - Error esta vacio $filtro[campo_filtro][operador].
      * @version 16.160.0
+     * @url https://github.com/gamboamartin/where/wiki/src.where.campo.valida_campo_filtro
      */
     private function valida_campo_filtro(string $campo, string $campo_filtro, array $filtro): true|array
     {
