@@ -321,7 +321,7 @@ class where
     }
 
     /**
-     * POR DOCUMENTAR EN WIKI FINAL REV
+     * TOTAL
      * Genera una consulta SQL a partir de los parámetros proporcionados.
      *
      * @param string $campo Campo de la consulta SQL.
@@ -332,6 +332,7 @@ class where
      *
      * @throws errores Error al validar datos o generar la consulta SQL.
      * @version 16.163.0
+     * @url https://github.com/gamboamartin/where/wiki/src.where.data_sql
      */
     final public function data_sql(string $campo, string $campo_filtro, array $filtro): array|string
     {
@@ -380,7 +381,7 @@ class where
     }
 
     /**
-     * POR DOCUMENTAR EN WIKI FINAL REV
+     * TOTAL
      * Valida el campo del filtro y retorna un string para la consulta SQL o un mensaje de error.
      *
      * @param string $campo El campo a validar.
@@ -389,6 +390,7 @@ class where
      *
      * @return string|array Retorna un string formateado para la consulta SQL o un mensaje de error.
      * @version 16.161.0
+     * @url https://github.com/gamboamartin/where/wiki/src.where.data_sql_campo
      */
     private function data_sql_campo(string $campo, string $campo_filtro, array $filtro): string|array
     {
