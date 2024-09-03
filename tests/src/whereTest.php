@@ -17,7 +17,7 @@ class whereTest extends test {
     public function test_and_filtro_fecha(){
         errores::$error = false;
         $wh = new where();
-        $wh = new liberator($wh);
+        //$wh = new liberator($wh);
 
 
         $filtro_fecha_sql = '';
@@ -593,7 +593,7 @@ class whereTest extends test {
     {
         errores::$error = false;
         $wh = new where();
-        $wh = new liberator($wh);
+        //$wh = new liberator($wh);
 
         $filtro_rango = array();
         $resultado = $wh->filtro_rango_sql($filtro_rango);

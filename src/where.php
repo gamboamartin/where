@@ -18,11 +18,13 @@ class where
     }
 
     /**
+     * TOTAL
      * La función 'and_filtro_fecha' agrega 'AND' al string dado si este no está vacío.
      *
      * @param string $txt Texto que se verificará si está vacío o no.
      * @return string Devuelve el texto original con ' AND ' agregado si el texto original no estaba vacío,
      * de lo contrario, devuelve el texto original.
+     * @url https://github.com/gamboamartin/where/wiki/src.where.and_filtro_fecha
      */
     final public function and_filtro_fecha(string $txt): string
     {
@@ -215,7 +217,7 @@ class where
     }
 
     /**
-     * POR DOCUMENTAR EN WIKI FINAL REV
+     *TOTAL
      * Función privada que genera una condición BETWEEN para una consulta SQL.
      *
      * @param string $campo El nombre del campo en el que se aplicará la condición.
@@ -228,6 +230,7 @@ class where
      *        En caso contrario, si $campo está vacío o $filtro no contiene los elementos 'valor1' y 'valor2',
      * retorna un error.
      * @version 16.232.0
+     * @url https://github.com/gamboamartin/where/wiki/src.where.condicion_entre
      */
     private function condicion_entre(string $campo, array $filtro, bool $valor_campo): string|array
     {
@@ -709,7 +712,7 @@ class where
     }
 
     /**
-     * POR DOCUMENTAR EN WIKI FINAL REV
+     * TOTAL
      *
      * Devuelve un conjunto de condiciones de tipo BETWEEN en forma de sql
      *
@@ -739,8 +742,10 @@ class where
      * @throws errores Si filtro[0] = array('valor2'=>'1') Debe existir valor1
      * @throws errores Si filtro[0] = array('valor1'=>'1','valor2'=>'2') key debe ser tabla.campo error sql
      * @version 16.236.0
+     * @url https://github.com/gamboamartin/where/wiki/src.where.filtro_rango_sql
      */
-    final public function filtro_rango_sql(array $filtro_rango):array|string{
+    final public function filtro_rango_sql(array $filtro_rango):array|string
+    {
         $filtro_rango_sql = '';
         foreach ($filtro_rango as $campo=>$filtro){
             if(!is_array($filtro)){
@@ -943,7 +948,7 @@ class where
     }
 
     /**
-     * POR DOCUMENTAR EN WIKI FINAL REV
+     * TOTAL
      * Devuelve una condicion en forma de sql validando si se tiene que precragar un AND o solo la sentencia
      * @param string $campo
      *                  Opcion 1.-Si valor_es_campo = false,
@@ -972,9 +977,11 @@ class where
      * @throws errores Si filtro[valor1] = vacio
      * @throws errores Si filtro[valor2] = vacio
      * @version 16.233.0
+     * @url https://github.com/gamboamartin/where/wiki/src.where.genera_filtro_rango_base
      */
     private function genera_filtro_rango_base(string $campo, array $filtro, string $filtro_rango_sql,
-                                              bool $valor_campo = false):array|string{
+                                              bool $valor_campo = false):array|string
+    {
         $campo = trim($campo);
         if($campo === ''){
             return  $this->error->error(mensaje: 'Error $campo no puede venir vacio',data: $campo, es_final: true);
@@ -1166,7 +1173,7 @@ class where
     }
 
     /**
-     * POR DOCUMENTAR EN WIKI FINAL REV
+     * TOTAL
      * Devuelve una condicion en forma de sql validando si se tiene que precragar un AND o solo la sentencia
      * @access public
      * @param string $filtro_rango_sql debe ser un sql con una condicion
@@ -1183,8 +1190,10 @@ class where
      * @return array|string
      * @throws errores Si $filtro_rango_sql es diferente de vacio y condicion es igual a vacio
      * @version 16.226.0
+     * @url https://github.com/gamboamartin/where/wiki/src.where.setea_filtro_rango
      */
-    private function setea_filtro_rango(string $condicion, string $filtro_rango_sql):array|string{
+    private function setea_filtro_rango(string $condicion, string $filtro_rango_sql):array|string
+    {
         $filtro_rango_sql = trim($filtro_rango_sql);
         $condicion = trim($condicion);
 
