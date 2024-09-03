@@ -89,12 +89,15 @@ class where
     }
 
     /**
+     * TOTAL
      * La función campo_data_filtro se usa para aplicar ciertas validaciones en la clave del array $data_filtro.
      *
      * @param  array $data_filtro El array de entrada que se tiene que validar.
      * @throws errores Si la clave del array está vacía o si la clave no es un string válido (no numérico).
      * @return string|array Devuelve la clave del array $data_filtro después de apliar trim() si la validación es exitosa.
      *                     En caso de error, se devuelve un array con los detalles del error.
+     *
+     * @url https://github.com/gamboamartin/where/wiki/src.where.campo_data_filtro
      *
      */
     private function campo_data_filtro(array $data_filtro): string|array
@@ -408,7 +411,7 @@ class where
     }
 
     /**
-     * POR DOCUMENTAR EN WIKI FINAL REV
+     * TOTAL
      * Esta función gestiona un array asociativo que implementa filtros especiales para la consulta SQL
      * que está siendo generada.
      *
@@ -441,6 +444,7 @@ class where
      * //    [condicion] => age>'21'
      * // )
      * @version 16.248.1
+     * @url https://github.com/gamboamartin/where/wiki/src.where.datos_filtro_especial
      */
     private function datos_filtro_especial(array $data_filtro):array|stdClass
     {
@@ -572,7 +576,7 @@ class where
     }
 
     /**
-     * POR DOCUMENTAR EN WIKI FINAL REV
+     * TOTAL
      * Funcion que genera las condiciones de sql de un filtro extra
      *
      * @param array $filtro_extra arreglo que contiene las condiciones
@@ -591,9 +595,11 @@ class where
      * @return array|string
      * @uses filtro_and()
      * @version 16.258.1
+     * @url https://github.com/gamboamartin/where/wiki/src.where.filtro_extra_sql
      *
      */
-    final public function filtro_extra_sql(array $filtro_extra):array|string{
+    final public function filtro_extra_sql(array $filtro_extra):array|string
+    {
         $filtro_extra_sql = '';
         foreach($filtro_extra as $data_filtro){
             if(!is_array($data_filtro)){
@@ -611,7 +617,7 @@ class where
     }
 
     /**
-     * POR DOCUMENTAR EN WIKI FINAL REV
+     * TOTAL
      * Función filtro_extra_sql_genera
      *
      * @param string $comparacion La cadena de texto utilizada para comparar
@@ -624,6 +630,7 @@ class where
      * Sin embargo, si el filtro SQL adicional no está establecido, la función simplemente añadirá la condición a este.
      * Finalmente, la función devuelve el filtro SQL adicional actualizado.
      * @version 16.252.1
+     * @url https://github.com/gamboamartin/where/wiki/src.where.filtro_extra_sql_genera
      */
     private function filtro_extra_sql_genera(string $comparacion, string $condicion, string $filtro_extra_sql): string
     {
@@ -1138,7 +1145,7 @@ class where
     }
 
     /**
-     * POR DOCUMENTAR EN WIKI FINAL REV
+     * TOTAL
      * Esta función toma un filtro adicional y lo integra a la consulta SQL actual.
      * Recibe una matriz de datos del filtro y una cadena que representa el filtro SQL extra.
      *
@@ -1150,6 +1157,7 @@ class where
      * @return object|string|array Retorna el filtro SQL extra integrado en caso de éxito. Si ocurre un error,
      *  retorna un objeto de error.
      * @version 16.257.1
+     * @url https://github.com/gamboamartin/where/wiki/src.where.integra_filtro_extra
      */
     private function integra_filtro_extra(array $data_filtro, string $filtro_extra_sql): object|string|array
     {

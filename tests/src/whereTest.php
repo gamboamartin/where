@@ -465,7 +465,7 @@ class whereTest extends test {
     {
         errores::$error = false;
         $wh = new where();
-        $wh = new liberator($wh);
+        //$wh = new liberator($wh);
 
         $filtro_extra = array();
         $resultado = $wh->filtro_extra_sql($filtro_extra);
