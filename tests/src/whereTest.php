@@ -430,7 +430,7 @@ class whereTest extends test {
     public function test_filtro_especial_sql(){
         errores::$error = false;
         $wh = new where();
-        $wh = new liberator($wh);
+        //$wh = new liberator($wh);
 
 
         $filtro_especial = array();
