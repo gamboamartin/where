@@ -1722,7 +1722,7 @@ class where
 
     /**
      * TOTAL
-     * Esta función privada toma un array de valores y los procesa para formar una parte de una consulta SQL.
+     * Esta función publica toma un array de valores y los procesa para formar una parte de una consulta SQL.
      *
      * Recorre cada valor en el conjunto de valores proporcionado para escapar y formatear correctamente el valor en
      * una representación de cadena que puede ser utilizada en una consulta SQL.
@@ -1737,7 +1737,7 @@ class where
      * @version 16.262.1
      * @url https://github.com/gamboamartin/where/wiki/src.where.values_sql_in
      */
-    private function values_sql_in(array $values): string|array
+    final public function values_sql_in(array $values): string|array
     {
         $values_sql = '';
         foreach ($values as $value){
