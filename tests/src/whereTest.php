@@ -781,7 +781,7 @@ class whereTest extends test {
     {
         errores::$error = false;
         $wh = new where();
-        $wh = new liberator($wh);
+        //$wh = new liberator($wh);
 
 
         $not_in = array();

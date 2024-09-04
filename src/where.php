@@ -1267,7 +1267,7 @@ class where
     }
 
     /**
-     * POR DOCUMENTAR EN WIKI FINAL REV
+     * TOTAL
      * Método privado que genera una cláusula NOT IN SQL a partir de un arreglo proporcionado.
      *
      * @param array $not_in Arreglo de elementos a ser excluidos en la consulta SQL.
@@ -1277,6 +1277,7 @@ class where
      *
      * @throws errores Lanza una excepción de tipo Error en caso de error en la generación de la cláusula SQL.
      * @version 16.276.1
+     * @url https://github.com/gamboamartin/where/wiki/src.where.genera_not_in
      */
     private function genera_not_in(array $not_in): array|string
     {
@@ -1293,7 +1294,7 @@ class where
     }
 
     /**
-     * POR DOCUMENTAR EN WIKI FINAL REV
+     * TOTAL
      * Genera la cláusula SQL NOT IN basada en los valores proporcionados.
      *
      * Esta función toma una matriz asociativa como parámetro, donde `llave` es el nombre del campo y `values` es una
@@ -1310,6 +1311,7 @@ class where
      *                      En caso de error, devuelve una matriz con los detalles del error.
      *
      * @version 16.278.1
+     * @url https://github.com/gamboamartin/where/wiki/src.where.genera_not_in_sql
      */
     final public function genera_not_in_sql(array $not_in): array|string
     {
@@ -1432,7 +1434,7 @@ class where
     }
 
     /**
-     * POR DOCUMENTAR EN WIKI FINAL REV
+     * TOTAL
      * Genera una cláusula SQL NOT IN a partir de una llave y valores proporcionados.
      *
      * @param string $llave Clave que será usada en la cláusula NOT IN.
@@ -1459,6 +1461,7 @@ class where
      * ]
      * ```
      * @version 16.272.1
+     * @url https://github.com/gamboamartin/where/wiki/src.where.not_in_sql
      */
     private function not_in_sql(string $llave, array $values): array|string
     {
