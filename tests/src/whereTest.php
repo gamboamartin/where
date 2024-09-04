@@ -747,7 +747,7 @@ class whereTest extends test {
     public function test_genera_in(){
         errores::$error = false;
         $wh = new where();
-        $wh = new liberator($wh);
+        //$wh = new liberator($wh);
 
 
         $in = array();

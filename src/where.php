@@ -294,7 +294,7 @@ class where
     }
 
     /**
-     * POR DOCUMENTAR EN WIKI FINAL REV
+     * TOTAL
      * Esta función se utiliza para procesar los datos entrantes ($in) y los organiza en un formato específico.
      *
      * @param array $in Datos entrantes que se deben procesar.
@@ -306,8 +306,9 @@ class where
      *               o si 'values' no es un array. En caso de error, se devuelve un array con detalles del error.
      *
      * @version 16.259.1
+     * @url https://github.com/gamboamartin/where/wiki/src.where.data_in
      */
-    final public function data_in(array $in): array|stdClass
+    private function data_in(array $in): array|stdClass
     {
         $keys = array('llave','values');
         $valida = $this->validacion->valida_existencia_keys( keys:$keys, registro: $in);
@@ -1013,7 +1014,7 @@ class where
     }
 
     /**
-     * POR DOCUMENTAR EN WIKI FINAL REV GENERAR EN PRIVATE
+     * TOTAL
      * Genera una cadena SQL para la cláusula IN en una consulta SQL.
      *
      * Esta función toma un array asociativo $in que debe tener las claves:
@@ -1032,6 +1033,7 @@ class where
      * @example genera_in(['llave' => 'id', 'values' => [1, 2, 3]]) retorna 'id IN (1,2,3)'
      *
      * @version 16.293.1
+     * @url https://github.com/gamboamartin/where/wiki/src.where.genera_in
      */
     final public function genera_in(array $in): array|string
     {
@@ -1039,11 +1041,6 @@ class where
         $valida = $this->validacion->valida_existencia_keys( keys:$keys, registro: $in);
         if(errores::$error){
             return $this->error->error(mensaje: 'Error al validar not_in',data: $valida);
-        }
-        $values = $in['values'];
-
-        if(!is_array($values)){
-            return $this->error->error(mensaje: 'Error values debe ser un array',data: $values, es_final: true);
         }
 
         $data_in = $this->data_in(in: $in);
@@ -1099,7 +1096,7 @@ class where
     }
 
     /**
-     * POR DOCUMENTAR EN WIKI FINAL REV
+     * TOTAL
      * La función in_sql genera y valida una instrucción SQL IN.
      *
      * @param string $llave El nombre del campo que se utilizará en la instrucción IN.
@@ -1119,6 +1116,7 @@ class where
      * - Cada paso de generación y validación puede disparar un error, así que se comprueba después de cada paso.
      *
      * @version 16.291.1
+     * @url https://github.com/gamboamartin/where/wiki/src.where.in_sql
      */
     private function in_sql(string $llave, array $values): array|string
     {
@@ -1686,7 +1684,7 @@ class where
     }
 
     /**
-     * POR DOCUMENTAR EN WIKI FINAL REV
+     * TOTAL
      * Este método comprueba si el valor proporcionado está vacío y, en caso de que no lo esté,
      * añade una coma al final de la cadena de valores SQL existente.
      *
@@ -1698,6 +1696,7 @@ class where
      *
      * @throws errores Si el valor está vacío.
      * @version 16.261.1
+     * @url https://github.com/gamboamartin/where/wiki/src.where.value_coma
      */
     private function value_coma(string $value, string $values_sql): array|stdClass
     {
@@ -1719,7 +1718,7 @@ class where
     }
 
     /**
-     * POR DOCUMENTAR EN WIKI FINAL REV
+     * TOTAL
      * Esta función privada toma un array de valores y los procesa para formar una parte de una consulta SQL.
      *
      * Recorre cada valor en el conjunto de valores proporcionado para escapar y formatear correctamente el valor en
@@ -1733,8 +1732,9 @@ class where
      * @return string|array Una cadena que representa la parte de una consulta SQL con valores formateados y escapados,
      * o un mensaje de error si se encuentra algún problema.
      * @version 16.262.1
+     * @url https://github.com/gamboamartin/where/wiki/src.where.values_sql_in
      */
-    final public function values_sql_in(array $values): string|array
+    private function values_sql_in(array $values): string|array
     {
         $values_sql = '';
         foreach ($values as $value){
