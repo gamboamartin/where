@@ -308,7 +308,7 @@ class where
      * @version 16.259.1
      * @url https://github.com/gamboamartin/where/wiki/src.where.data_in
      */
-    private function data_in(array $in): array|stdClass
+    final public function data_in(array $in): array|stdClass
     {
         $keys = array('llave','values');
         $valida = $this->validacion->valida_existencia_keys( keys:$keys, registro: $in);
