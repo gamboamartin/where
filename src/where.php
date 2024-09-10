@@ -6,6 +6,24 @@ use gamboamartin\src\validaciones;
 use gamboamartin\validacion\validacion;
 use stdClass;
 
+/**
+ * TOTAL
+ * Clase where
+ *
+ * Esta clase contiene una serie de métodos para generar consultas SQL con filtros
+ * como IN, NOT IN, BETWEEN, y otros. Cada método está orientado a validar y construir
+ * las partes de una consulta SQL según los parámetros dados.
+ *
+ * ### Dependencias:
+ * - Utiliza las clases `errores`, `sql`, `validacion`, y `validaciones`.
+ *
+ * ### Métodos principales:
+ * - Filtros SQL (`IN`, `NOT IN`, `BETWEEN`, etc.).
+ * - Validación de campos y filtros.
+ * - Generación de sentencias SQL con múltiples condiciones.
+ *
+ */
+
 class where
 {
     private errores $error;
@@ -36,6 +54,7 @@ class where
     }
 
     /**
+     * TOTAL
      * Esta función asigna una serie de filtros SQL a un objeto stdClass y retorna este objeto.
      * Cada filtro es una cadena de texto formateada como una sentencia SQL.
      *
@@ -50,6 +69,7 @@ class where
      * @param string $sql_extra            Cualquier sentencia SQL extra.
      *
      * @return stdClass El objeto que contiene todos los filtros SQL.
+     * @url https://github.com/gamboamartin/where/wiki/src.where.asigna_data_filtro
      */
    final public function asigna_data_filtro(string $diferente_de_sql, string $filtro_especial_sql,
                                                 string $filtro_extra_sql, string $filtro_fecha_sql,
@@ -647,7 +667,7 @@ class where
     }
 
     /**
-     * POR DOCUMENTAR EN WIKI FINAL REV
+     * TOTAL
      * Este método procesa la fecha enviada y retorna una consulta SQL representando el filtro de la fecha.
      *
      * @param array $filtro_fecha Representa la fecha que se va a filtrar.
