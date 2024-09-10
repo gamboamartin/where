@@ -258,7 +258,7 @@ class where
     }
 
     /**
-     * POR DOCUMENTAR EN WIKI FINAL REV
+     * TOTAL
      * Manipula y valida los datos de filtro para las fechas.
      *
      * Esta función acepta un arreglo asociativo con tres claves: 'campo_1', 'campo_2' y 'fecha'.
@@ -274,6 +274,7 @@ class where
      * @throws errores Si ocurre un error durante la validación, se lanza una excepción.
      *
      * @version 16.307.1
+     * @url https://github.com/gamboamartin/where/wiki/src.where.data_filtro_fecha
      */
     private function data_filtro_fecha(array $fil_fecha): stdClass|array
     {
@@ -657,10 +658,10 @@ class where
      * @throws errores si no se pudo generar la consulta SQL del filtro de fecha.
      *
      * @version 16.313.1
+     * @url https://github.com/gamboamartin/where/wiki/src.where.filtro_fecha
      */
-    final public function filtro_fecha(array $filtro_fecha):array|string{
-
-
+    final public function filtro_fecha(array $filtro_fecha):array|string
+    {
         $filtro_fecha_sql = $this->filtro_fecha_base(filtro_fecha: $filtro_fecha);
         if(errores::$error){
             return $this->error->error(mensaje: 'Error al obtener sql',data: $filtro_fecha_sql);
@@ -674,7 +675,7 @@ class where
     }
 
     /**
-     * POR DOCUMENTAR EN WIKI FINAL REV
+     * TOTAL
      * Esta función se encarga de crear una cadena SQL para filtrar por fecha.
      *
      * @param array $filtro_fecha Un array que contiene los criterios de filtro de fecha.
@@ -693,6 +694,7 @@ class where
      * Finalmente, agrega la cadena SQL al $filtro_fecha_sql y al final del ciclo retorna $filtro_fecha_sql
      *
      * @version 16.312.1
+     * @url https://github.com/gamboamartin/where/wiki/src.where.filtro_fecha_base
      */
     private function filtro_fecha_base(array $filtro_fecha): array|string
     {
@@ -1221,7 +1223,7 @@ class where
     }
 
     /**
-     * POR DOCUMENTAR EN WIKI FINAL REV
+     * TOTAL
      * El método sql_fecha genera un fragmento de consulta SQL basado en un rango de fechas.
      *
      * Este método toma dos parámetros: uno para la conjunción de SQL (AND / OR etc.) y otro
@@ -1243,6 +1245,7 @@ class where
      *          Esto generaría: "(created_at >= '2023-01-01' AND created_at <= '2023-12-31')"
      *
      * @version 16.309.1
+     * @url https://github.com/gamboamartin/where/wiki/src.where.sql_fecha
      */
     private function sql_fecha(string $and, stdClass $data): string|array
     {
@@ -1332,7 +1335,7 @@ class where
     }
 
     /**
-     * POR DOCUMENTAR EN WIKI FINAL REV
+     * TOTAL
      * La función 'genera_sql_filtro_fecha' es privada y se encarga de generar un filtro de SQL para fechas.
      *
      * @param array $fil_fecha Es el filtro de fecha a validar y procesar.
@@ -1349,6 +1352,7 @@ class where
      * 5. Si todo ha ido bien, retorna la sentencia SQL generada.
      *
      * @version 16.311.1
+     * @url https://github.com/gamboamartin/where/wiki/src.where.genera_sql_filtro_fecha
      */
     private function genera_sql_filtro_fecha(array $fil_fecha, string $filtro_fecha_sql): array|string
     {
@@ -1597,7 +1601,7 @@ class where
     }
 
     /**
-     * POR DOCUMENTAR EN WIKI FINAL REV
+     * TOTAL
      * Esta función valida un filtro de fecha proporcionado en un array.
      *
      * Dentro del array proporcionado, la función busca la presencia de las claves 'campo_1', 'campo_2' y 'fecha'.
@@ -1613,6 +1617,7 @@ class where
      * @return bool|array Retorna true si las validaciones son exitosas. Retorna un array de errores si alguna validación falla.
      *
      * @version 16.306.1
+     * @url https://github.com/gamboamartin/where/wiki/src.where.valida_data_filtro_fecha
      */
     private function valida_data_filtro_fecha(array $fil_fecha): true|array
     {
@@ -1629,7 +1634,7 @@ class where
     }
 
     /**
-     * POR DOCUMENTAR EN WIKI FINAL REV
+     * TOTAL
      * Esta función valida un array de filtro de fecha.
      *
      * @param array $fil_fecha Array que contiene la información del filtro de fecha. Debería de contener los campos 'campo_1', 'campo_2' y 'fecha'.
@@ -1638,6 +1643,7 @@ class where
      *
      * @throws errores Posibles errores que pueden ocurrir durante la validación.
      * @version 16.305.1
+     * @url https://github.com/gamboamartin/where/wiki/src.where.valida_filtro_fecha
      */
     private function valida_filtro_fecha(array $fil_fecha): bool|array
     {
