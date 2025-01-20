@@ -36,22 +36,42 @@ class where
     }
 
     /**
-     * TOTAL
-     * La función 'and_filtro_fecha' agrega 'AND' al string dado si este no está vacío.
+     * REG
+     * Retorna la cadena `" AND "` si `$txt` no está vacío; de lo contrario, retorna una cadena vacía.
      *
-     * @param string $txt Texto que se verificará si está vacío o no.
-     * @return string Devuelve el texto original con ' AND ' agregado si el texto original no estaba vacío,
-     * de lo contrario, devuelve el texto original.
-     * @url https://github.com/gamboamartin/where/wiki/src.where.and_filtro_fecha
+     * Este método se puede usar para concatenar condiciones adicionales en una cláusula SQL
+     * únicamente cuando el texto `$txt` contenga información (por ejemplo, un filtro o
+     * condición). Si `$txt` está vacío, no se agrega `" AND "`.
+     *
+     * @param string $txt Cadena a validar. Si no es `''`, se retornará `" AND "`.
+     *
+     * @return string Retorna:
+     *  - `" AND "` si `$txt` no está vacío.
+     *  - `""` (cadena vacía) si `$txt` está vacío.
+     *
+     * @example
+     *  Ejemplo 1: `$txt` con valor
+     *  -----------------------------------------------------------------------------------
+     *  $txt = "fecha > '2020-01-01'";
+     *  $resultado = $this->and_filtro_fecha($txt);
+     *  // $resultado será " AND ".
+     *
+     * @example
+     *  Ejemplo 2: `$txt` vacío
+     *  -----------------------------------------------------------------------------------
+     *  $txt = "";
+     *  $resultado = $this->and_filtro_fecha($txt);
+     *  // $resultado será "" (cadena vacía).
      */
     final public function and_filtro_fecha(string $txt): string
     {
         $and = '';
-        if($txt !== ''){
+        if ($txt !== '') {
             $and = ' AND ';
         }
         return $and;
     }
+
 
     /**
      * TOTAL
@@ -240,42 +260,95 @@ class where
     }
 
     /**
-     *TOTAL
-     * Función privada que genera una condición BETWEEN para una consulta SQL.
+     * REG
+     * Genera una condición SQL para un intervalo en la forma `campo BETWEEN 'valor1' AND 'valor2'`.
      *
-     * @param string $campo El nombre del campo en el que se aplicará la condición.
-     * @param array $filtro Un array asociativo que debe contener los elementos 'valor1' y 'valor2'
-     * los cuales delimitarán el rango de la condición BETWEEN.
-     * @param bool $valor_campo Indica si el valor de $campo debe ser tratado como un string
-     *        (si $valor_campo es true, se añaden comillas simples alrededor del nombre del campo).
+     * - Valida que `$campo` no sea una cadena vacía.
+     * - Asegura que `$filtro` contenga las claves `valor1` y `valor2`.
+     * - Luego construye la cadena para la condición `BETWEEN`.
+     * - Si `$valor_campo` es `true`, se asume que `campo` ya viene con sus propias comillas y se omite el envoltorio de `'...'`
+     *   en los valores `valor1` y `valor2`.
+     *   De lo contrario, el campo se incluye directamente, rodeado de comillas simples en la parte izquierda y derecha.
      *
-     * @return string|array Retorna la condición BETWEEN como un string si todo está correcto.
-     *        En caso contrario, si $campo está vacío o $filtro no contiene los elementos 'valor1' y 'valor2',
-     * retorna un error.
-     * @version 16.232.0
-     * @url https://github.com/gamboamartin/where/wiki/src.where.condicion_entre
+     * @param string $campo         Nombre de la columna para la cláusula BETWEEN (p. ej. `"fecha"`).
+     * @param array  $filtro        Debe contener al menos `['valor1' => x, 'valor2' => y]`.
+     * @param bool   $valor_campo   Indica si `$campo` y los valores se usan textualmente o con comillas para el BETWEEN.
+     *
+     * @return string|array Retorna la cadena de condición (p. ej. `"fecha BETWEEN '2023-01-01' AND '2023-12-31'"`),
+     *                      o un arreglo de error si se presenta alguna falla.
+     *
+     * @example
+     *  Ejemplo 1: Uso con valores de fecha
+     *  --------------------------------------------------------------------------------
+     *  $campo = "fecha_creacion";
+     *  $filtro = [
+     *      'valor1' => '2023-01-01',
+     *      'valor2' => '2023-12-31'
+     *  ];
+     *  $resultado = $this->condicion_entre($campo, $filtro, false);
+     *  // Retornará:
+     *  // "fecha_creacion BETWEEN '2023-01-01' AND '2023-12-31'"
+     *
+     * @example
+     *  Ejemplo 2: $valor_campo = true
+     *  --------------------------------------------------------------------------------
+     *  $campo = "campoEspecial";
+     *  $filtro = [
+     *      'valor1' => 100,
+     *      'valor2' => 200
+     *  ];
+     *  $resultado = $this->condicion_entre($campo, $filtro, true);
+     *  // Retornará:
+     *  // "'campoEspecial' BETWEEN 100 AND 200"
+     *
+     * @example
+     *  Ejemplo 3: Falta clave en $filtro
+     *  --------------------------------------------------------------------------------
+     *  $campo = "precio";
+     *  $filtro = [
+     *      'valor1' => 100
+     *      // Falta 'valor2'
+     *  ];
+     *  $resultado = $this->condicion_entre($campo, $filtro, false);
+     *  // Retornará un arreglo de error indicando "Error campo vacío $filtro[valor2]"
      */
     private function condicion_entre(string $campo, array $filtro, bool $valor_campo): string|array
     {
         $campo = trim($campo);
-        if($campo === ''){
-            return $this->error->error(mensaje: 'Error campo vacío', data: $campo, es_final: true);
+        if ($campo === '') {
+            return $this->error->error(
+                mensaje: 'Error campo vacío',
+                data: $campo,
+                es_final: true
+            );
         }
-        if(!isset($filtro['valor1'])){
-            return $this->error->error(mensaje: 'Error campo vacío $filtro[valor1]', data: $campo, es_final: true);
-        }
-        if(!isset($filtro['valor2'])){
-            return $this->error->error(mensaje: 'Error campo vacío $filtro[valor2]', data: $campo, es_final: true);
-        }
-        $condicion = $campo . ' BETWEEN ' ."'" .$filtro['valor1'] . "'"." AND "."'".$filtro['valor2'] . "'";
 
-        if($valor_campo){
-            $condicion = "'".$campo."'" . ' BETWEEN '  .$filtro['valor1'] ." AND ".$filtro['valor2'];
+        if (!isset($filtro['valor1'])) {
+            return $this->error->error(
+                mensaje: 'Error campo vacío $filtro[valor1]',
+                data: $campo,
+                es_final: true
+            );
+        }
+
+        if (!isset($filtro['valor2'])) {
+            return $this->error->error(
+                mensaje: 'Error campo vacío $filtro[valor2]',
+                data: $campo,
+                es_final: true
+            );
+        }
+
+        // Construye la condición BETWEEN dependiendo de valor_campo
+        $condicion = $campo . ' BETWEEN ' . "'" . $filtro['valor1'] . "'" . ' AND ' . "'" . $filtro['valor2'] . "'";
+
+        if ($valor_campo) {
+            $condicion = "'" . $campo . "'" . ' BETWEEN ' . $filtro['valor1'] . ' AND ' . $filtro['valor2'];
         }
 
         return $condicion;
-
     }
+
 
     /**
      * TOTAL
@@ -315,38 +388,90 @@ class where
     }
 
     /**
-     * TOTAL
-     * Esta función se utiliza para procesar los datos entrantes ($in) y los organiza en un formato específico.
+     * REG
+     * Valida y transforma un arreglo `$in` que describe una cláusula `IN`, asegurándose de que contenga
+     * las claves `'llave'` y `'values'`. Además, verifica que `'values'` sea un arreglo.
      *
-     * @param array $in Datos entrantes que se deben procesar.
-     *                  Debe contener las claves 'llave' y 'values'.
-     * @return array|stdClass Devuelve un objeto que contiene los datos procesados.
-     *                        Si hay un error durante la validación, devuelve un array con detalles del error.
+     * - Primero, usa {@see validacion->valida_existencia_keys()} para confirmar que `$in` contenga las claves requeridas.
+     * - Luego, comprueba que `'values'` sea realmente un array.
+     * - Si alguna validación falla, se invoca `$this->error->error()` y se retorna un arreglo con la información del error.
+     * - Si todo es correcto, se retorna un `stdClass` con las propiedades:
+     *   - `llave`: El nombre de la llave o columna.
+     *   - `values`: El arreglo de valores a usar en la cláusula `IN`.
      *
-     * @throws errores Si los datos entrantes no contienen las claves requeridas,
-     *               o si 'values' no es un array. En caso de error, se devuelve un array con detalles del error.
+     * @param array $in Estructura que debe contener al menos:
+     *                  - 'llave'  (string): Nombre de la columna.
+     *                  - 'values' (array): Lista de valores a incluir en la cláusula IN.
      *
-     * @version 16.259.1
-     * @url https://github.com/gamboamartin/where/wiki/src.where.data_in
+     * @return array|stdClass Retorna:
+     *  - Un objeto `stdClass` con las propiedades `llave` y `values` si todo es válido.
+     *  - Un arreglo con información del error (generado por `$this->error->error()`) si algo falla.
+     *
+     * @example
+     *  Ejemplo 1: Entrada válida
+     *  ----------------------------------------------------------------------------
+     *  $in = [
+     *      'llave' => 'categoria_id',
+     *      'values' => [10, 20, 30]
+     *  ];
+     *
+     *  $resultado = $this->data_in($in);
+     *  // $resultado será un stdClass con:
+     *  // {
+     *  //   llave: 'categoria_id',
+     *  //   values: [10, 20, 30]
+     *  // }
+     *
+     * @example
+     *  Ejemplo 2: Falta la clave 'values'
+     *  ----------------------------------------------------------------------------
+     *  $in = [
+     *      'llave' => 'categoria_id'
+     *      // Falta 'values'
+     *  ];
+     *
+     *  $resultado = $this->data_in($in);
+     *  // Retorna un arreglo de error indicando que 'values' no existe.
+     *
+     * @example
+     *  Ejemplo 3: 'values' no es un array
+     *  ----------------------------------------------------------------------------
+     *  $in = [
+     *      'llave' => 'categoria_id',
+     *      'values' => 'no_es_un_array'
+     *  ];
+     *
+     *  $resultado = $this->data_in($in);
+     *  // Retorna un arreglo de error indicando que 'values' debe ser un array.
      */
     final public function data_in(array $in): array|stdClass
     {
-        $keys = array('llave','values');
-        $valida = $this->validacion->valida_existencia_keys( keys:$keys, registro: $in);
-        if(errores::$error){
-            return $this->error->error(mensaje: 'Error al validar not_in',data: $valida);
+        $keys = array('llave', 'values');
+        $valida = $this->validacion->valida_existencia_keys(keys: $keys, registro: $in);
+        if (errores::$error) {
+            return $this->error->error(
+                mensaje: 'Error al validar not_in',
+                data: $valida
+            );
         }
 
         $values = $in['values'];
 
-        if(!is_array($values)){
-            return $this->error->error(mensaje: 'Error values debe ser un array',data: $values, es_final: true);
+        if (!is_array($values)) {
+            return $this->error->error(
+                mensaje: 'Error values debe ser un array',
+                data: $values,
+                es_final: true
+            );
         }
+
         $data = new stdClass();
-        $data->llave = $in['llave'];
+        $data->llave  = $in['llave'];
         $data->values = $in['values'];
+
         return $data;
     }
+
 
     /**
      * TOTAL
@@ -742,69 +867,127 @@ class where
     }
 
     /**
-     * TOTAL
+     * REG
+     * Genera una cláusula SQL que combina múltiples filtros de rango mediante la iteración
+     * sobre el arreglo `$filtro_rango`. Cada entrada en el arreglo se interpreta como un rango
+     * con las claves `valor1` y `valor2`, que definen los límites de cada filtro.
      *
-     * Devuelve un conjunto de condiciones de tipo BETWEEN en forma de sql
+     * Pasos principales:
+     * 1. **Validación del formato de los filtros**:
+     *    - Cada entrada en `$filtro_rango` debe ser un array.
+     *    - Cada filtro debe incluir obligatoriamente las claves `valor1` y `valor2`.
+     *    - La clave del filtro (`$campo`) debe ser un string no numérico.
+     * 2. **Generación de la cláusula SQL**:
+     *    - Para cada filtro, se llama a {@see genera_filtro_rango_base()} para generar y
+     *      concatenar la condición de rango al resultado acumulado en `$filtro_rango_sql`.
+     * 3. **Compatibilidad con valores textuales**:
+     *    - Si un filtro incluye la clave `valor_campo` como `true`, se procesa sin comillas
+     *      alrededor de los valores del rango.
+     * 4. **Manejo de errores**:
+     *    - Si alguna validación falla, se genera un error detallado mediante `$this->error->error()`.
      *
-     * @param array $filtro_rango
-     *                  Opcion1.- Debe ser un array con la siguiente forma array('valor1'=>'valor','valor2'=>'valor')
-     *                  Opcion2.-
-     *                      Debe ser un array con la siguiente forma
-     *                          array('valor1'=>'valor','valor2'=>'valor','valor_campo'=>true)
+     * @param array $filtro_rango Arreglo asociativo donde las claves representan los campos,
+     *                            y los valores son arrays con las claves `valor1`, `valor2` y
+     *                            opcionalmente `valor_campo` (bool).
+     *
+     * @return array|string Retorna:
+     *   - Un string con la cláusula SQL de rango generada.
+     *   - Un arreglo con información de error si alguna validación falla.
+     *
      * @example
-     *      $entrada = array();
-     *      $resultado = filtro_rango_sql($entrada)
-     *      //return = string ''
-     *      $entrada['x'] = array('''valor1'=>'1','valor2=>2);
-     *      $resultado = filtro_rango_sql($entrada)
-     *      //return string x = BETWEEN '1' AND '2'
-     *      $entrada['x'] = array('''valor1'=>'1','valor2=>2,'valor_campo'=>true);
-     *      $resultado = filtro_rango_sql($entrada)
-     *      //return string 'x' = BETWEEN 1 AND 2
-     *      $entrada['x'] = array('''valor1'=>'1','valor2=>2,'valor_campo'=>true);
-     *      $entrada['y'] = array('''valor1'=>'2','valor2=>3,'valor_campo'=>false);
-     *      $entrada['z'] = array('''valor1'=>'4','valor2=>5);
-     *      $resultado = filtro_rango_sql($entrada)
-     *      //return string 'x' = BETWEEN 1 AND 2 AND y BETWEEN 2 AND 3 AND z BETWEEN 4 AND 5
-     * @return array|string
-     * @throws errores Si $filtro_rango[0] != array
-     * @throws errores Si filtro[0] = array('valor1'=>'1') Debe existir valor2
-     * @throws errores Si filtro[0] = array('valor2'=>'1') Debe existir valor1
-     * @throws errores Si filtro[0] = array('valor1'=>'1','valor2'=>'2') key debe ser tabla.campo error sql
-     * @version 16.236.0
-     * @url https://github.com/gamboamartin/where/wiki/src.where.filtro_rango_sql
+     *  Ejemplo 1: Generar filtros de rango para múltiples campos
+     *  -----------------------------------------------------------------------------
+     *  $filtro_rango = [
+     *      'fecha_creacion' => [
+     *          'valor1' => '2023-01-01',
+     *          'valor2' => '2023-12-31'
+     *      ],
+     *      'precio' => [
+     *          'valor1' => 100,
+     *          'valor2' => 500,
+     *          'valor_campo' => true
+     *      ]
+     *  ];
+     *
+     *  $resultado = $this->filtro_rango_sql($filtro_rango);
+     *  // Retorna algo como:
+     *  // "fecha_creacion BETWEEN '2023-01-01' AND '2023-12-31' AND precio BETWEEN 100 AND 500"
+     *
+     * @example
+     *  Ejemplo 2: Error por falta de valor2 en un filtro
+     *  -----------------------------------------------------------------------------
+     *  $filtro_rango = [
+     *      'fecha_creacion' => [
+     *          'valor1' => '2023-01-01'
+     *          // Falta 'valor2'
+     *      ]
+     *  ];
+     *
+     *  $resultado = $this->filtro_rango_sql($filtro_rango);
+     *  // Retorna un arreglo de error indicando que falta 'valor2'.
      */
-    final public function filtro_rango_sql(array $filtro_rango):array|string
+    final public function filtro_rango_sql(array $filtro_rango): array|string
     {
         $filtro_rango_sql = '';
-        foreach ($filtro_rango as $campo=>$filtro){
-            if(!is_array($filtro)){
-                return  $this->error->error(mensaje: 'Error $filtro debe ser un array',data: $filtro, es_final: true);
+        foreach ($filtro_rango as $campo => $filtro) {
+            // Validar que cada filtro sea un array
+            if (!is_array($filtro)) {
+                return $this->error->error(
+                    mensaje: 'Error $filtro debe ser un array',
+                    data: $filtro,
+                    es_final: true
+                );
             }
-            if(!isset($filtro['valor1'])){
-                return  $this->error->error(mensaje:'Error $filtro[valor1] debe existir',data:$filtro, es_final: true);
-            }
-            if(!isset($filtro['valor2'])){
-                return  $this->error->error(mensaje:'Error $filtro[valor2] debe existir',data:$filtro, es_final: true);
-            }
-            $campo = trim($campo);
-            if(is_numeric($campo)){
-                return  $this->error->error(mensaje:'Error campo debe ser un string',data:$campo, es_final: true);
-            }
-            $valor_campo = false;
 
-            if(isset($filtro['valor_campo']) && $filtro['valor_campo']){
-                $valor_campo = true;
+            // Verificar existencia de las claves 'valor1' y 'valor2' en cada filtro
+            if (!isset($filtro['valor1'])) {
+                return $this->error->error(
+                    mensaje: 'Error $filtro[valor1] debe existir',
+                    data: $filtro,
+                    es_final: true
+                );
             }
-            $filtro_rango_sql = $this->genera_filtro_rango_base(campo: $campo,filtro: $filtro,
-                filtro_rango_sql: $filtro_rango_sql,valor_campo: $valor_campo);
-            if(errores::$error){
-                return  $this->error->error(mensaje:'Error $filtro_rango_sql al generar',data:$filtro_rango_sql);
+
+            if (!isset($filtro['valor2'])) {
+                return $this->error->error(
+                    mensaje: 'Error $filtro[valor2] debe existir',
+                    data: $filtro,
+                    es_final: true
+                );
+            }
+
+            // Validar que la clave del campo sea un string no numérico
+            $campo = trim($campo);
+            if (is_numeric($campo)) {
+                return $this->error->error(
+                    mensaje: 'Error campo debe ser un string',
+                    data: $campo,
+                    es_final: true
+                );
+            }
+
+            // Determinar si los valores se interpretan como texto o no
+            $valor_campo = isset($filtro['valor_campo']) && $filtro['valor_campo'];
+
+            // Generar la condición SQL para este campo y filtro
+            $filtro_rango_sql = $this->genera_filtro_rango_base(
+                campo: $campo,
+                filtro: $filtro,
+                filtro_rango_sql: $filtro_rango_sql,
+                valor_campo: $valor_campo
+            );
+
+            if (errores::$error) {
+                return $this->error->error(
+                    mensaje: 'Error $filtro_rango_sql al generar',
+                    data: $filtro_rango_sql
+                );
             }
         }
 
         return $filtro_rango_sql;
     }
+
 
     /**
      * TOTAL
@@ -978,105 +1161,203 @@ class where
     }
 
     /**
-     * TOTAL
-     * Devuelve una condicion en forma de sql validando si se tiene que precragar un AND o solo la sentencia
-     * @param string $campo
-     *                  Opcion 1.-Si valor_es_campo = false,
-     *                      El valor definido debe ser un campo de la base de datos con la siguiente forma tabla.campo
-     *                  Opcion 2.-Si valor_es_campo = true,
-     *                      El valor definido debe ser un valor del registro del rango a buscar
+     * REG
+     * Genera y ajusta una cláusula de filtro de rango SQL basada en un campo específico,
+     * valores límite proporcionados y un filtro de rango SQL existente.
      *
-     * @param array $filtro Debe ser un array con la siguiente forma array('valor1'=>'valor','valor2'=>'valor')
-     * @param string $filtro_rango_sql debe ser un sql con una condicion
-     * @param bool $valor_campo
-     *                  Opcion1.- true, Es utilizado para definir el campo para una comparacion como valor
-     *                  Opcion2.- false, Es utilizado para definir el campo a comparar el rango de valores
+     * Flujo del método:
+     * 1. **Validación del campo**: Verifica que `$campo` no sea una cadena vacía.
+     * 2. **Verificación de claves en el filtro**: Asegura que en el arreglo `$filtro` existan
+     *    las claves `'valor1'` y `'valor2'`, necesarias para definir un rango.
+     * 3. **Construcción de la condición BETWEEN**:
+     *    Utiliza {@see condicion_entre()} para generar una condición SQL que defina un
+     *    rango basado en `$campo` y los valores en `$filtro`. El parámetro `$valor_campo`
+     *    determina cómo se formatea la condición.
+     * 4. **Integración de la condición en el filtro de rango SQL**:
+     *    Llama a {@see setea_filtro_rango()} para añadir la condición generada a la cadena
+     *    `$filtro_rango_sql`, precedida de `" AND "` si es necesario.
+     *
+     * En cada paso, si ocurre un error (por ejemplo, validaciones fallidas o problemas al
+     * generar la condición), el método retorna un arreglo de error con detalles del problema.
+     * Si todo es exitoso, retorna la cadena ajustada `$filtro_rango_sql_r` con la nueva
+     * condición integrada.
+     *
+     * @param string $campo              Nombre de la columna sobre la cual se aplica el filtro de rango.
+     * @param array  $filtro             Arreglo que debe contener las claves 'valor1' y 'valor2'
+     *                                  para definir los límites del rango.
+     * @param string $filtro_rango_sql   Cadena SQL inicial que representa los filtros de rango
+     *                                  previos y a la cual se le añadirá una nueva condición.
+     * @param bool   $valor_campo        (Opcional) Indica cómo se construye la condición BETWEEN:
+     *                                   - `false` (por defecto): aplica comillas a los valores.
+     *                                   - `true`: usa `$campo` y valores textuales sin comillas.
+     *
+     * @return array|string Retorna:
+     *   - Un `string` con el filtro de rango SQL actualizado si todo se procesa correctamente.
+     *   - Un `array` de error con detalles si ocurre alguna falla en el proceso.
+     *
      * @example
-     *      $resultado = genera_filtro_rango_base('',array(),'');
-     *      //return = array errores
-     *      $resultado = genera_filtro_rango_base('x',array(),'');
-     *      //return = array errores
-     *      $resultado = genera_filtro_rango_base('x',array('valor1'=>x,'valor2'=>'y'),'');
-     *      //return = string 'x BETWEEN 'x' AND 'y' ;
-     *      $resultado = genera_filtro_rango_base('x',array('valor1'=>x,'valor2'=>'y'),'tabla.campo = 1');
-     *      //return = string tabla.campo = 1 AND  x BETWEEN 'x' AND 'y' ;
-     *      $resultado = genera_filtro_rango_base('x',array('valor1'=>x,'valor2'=>'y'),'tabla.campo = 1',true);
-     *      //return = string tabla.campo = 1 AND  'x' BETWEEN x AND y ;
-     * @return array|string
-     * @throws errores Si $campo = vacio
-     * @throws errores Si filtro[valor1] = vacio
-     * @throws errores Si filtro[valor2] = vacio
-     * @version 16.233.0
-     * @url https://github.com/gamboamartin/where/wiki/src.where.genera_filtro_rango_base
+     *  Ejemplo: Generar un filtro de rango para fechas
+     *  ----------------------------------------------------------------------------
+     *  $campo = "fecha_creacion";
+     *  $filtro = [
+     *      'valor1' => '2023-01-01',
+     *      'valor2' => '2023-12-31'
+     *  ];
+     *  $filtro_rango_sql = "WHERE estado = 'activo'";
+     *
+     *  $resultado = $this->genera_filtro_rango_base($campo, $filtro, $filtro_rango_sql);
+     *  // Supongamos que no hay errores y $valor_campo es false por defecto.
+     *  // $resultado podría convertirse en:
+     *  // "WHERE estado = 'activo' AND fecha_creacion BETWEEN '2023-01-01' AND '2023-12-31'"
      */
-    private function genera_filtro_rango_base(string $campo, array $filtro, string $filtro_rango_sql,
-                                              bool $valor_campo = false):array|string
+    final public function genera_filtro_rango_base(
+        string $campo,
+        array $filtro,
+        string $filtro_rango_sql,
+        bool $valor_campo = false
+    ): array|string
     {
         $campo = trim($campo);
         if($campo === ''){
-            return  $this->error->error(mensaje: 'Error $campo no puede venir vacio',data: $campo, es_final: true);
+            return $this->error->error(
+                mensaje: 'Error $campo no puede venir vacio',
+                data: $campo,
+                es_final: true
+            );
         }
+
         $keys = array('valor1','valor2');
-        $valida = $this->validacion->valida_existencia_keys(keys:$keys, registro: $filtro);
+        $valida = $this->validacion->valida_existencia_keys(keys: $keys, registro: $filtro);
         if(errores::$error){
-            return  $this->error->error(mensaje: 'Error al validar filtro',data: $valida);
+            return $this->error->error(
+                mensaje: 'Error al validar filtro',
+                data: $valida
+            );
         }
 
-        $condicion = $this->condicion_entre(campo: $campo,filtro:  $filtro,valor_campo:  $valor_campo);
+        $condicion = $this->condicion_entre(
+            campo: $campo,
+            filtro:  $filtro,
+            valor_campo:  $valor_campo
+        );
         if(errores::$error){
-            return  $this->error->error(mensaje: 'Error al generar condicion',data: $condicion);
+            return $this->error->error(
+                mensaje: 'Error al generar condicion',
+                data: $condicion
+            );
         }
 
-        $filtro_rango_sql_r = $this->setea_filtro_rango(condicion: $condicion, filtro_rango_sql: $filtro_rango_sql);
+        $filtro_rango_sql_r = $this->setea_filtro_rango(
+            condicion: $condicion,
+            filtro_rango_sql: $filtro_rango_sql
+        );
         if(errores::$error){
-            return $this->error->error(mensaje: 'Error $filtro_rango_sql al setear',data: $filtro_rango_sql_r);
+            return $this->error->error(
+                mensaje: 'Error $filtro_rango_sql al setear',
+                data: $filtro_rango_sql_r
+            );
         }
 
         return $filtro_rango_sql_r;
     }
 
+
     /**
-     * TOTAL
-     * Genera una cadena SQL para la cláusula IN en una consulta SQL.
+     * REG
+     * Genera una cláusula SQL `IN` (por ejemplo, `"campo IN ('valor1','valor2',...')"`), a partir de un arreglo `$in`
+     * que debe contener al menos:
+     *  - `'llave'`  (string): Nombre de la columna.
+     *  - `'values'` (array):  Lista de valores a incluir en la cláusula IN.
      *
-     * Esta función toma un array asociativo $in que debe tener las claves:
-     * - 'llave': representa el nombre de columna en la cláusula SQL IN
-     * - 'values': un array de valores para la cláusula SQL IN
+     * Flujo de validación y construcción:
+     * 1. **Verifica la existencia de las claves** `'llave'` y `'values'` en `$in` mediante
+     *    {@see validacion->valida_existencia_keys()}.
+     * 2. **Obtiene un objeto** (`stdClass`) con `llave` y `values` usando {@see data_in()}, validando que `'values'` sea un array.
+     * 3. **Construye la cláusula IN** con el método {@see in_sql()}.
+     * 4. Si ocurre algún error en los pasos anteriores, se retorna un arreglo generado por `$this->error->error()`
+     *    con la descripción del problema. De lo contrario, devuelve la cadena final de la forma
+     *    `"llave IN ('val1','val2',...)"`
      *
-     * Luego realiza las siguientes operaciones:
-     * 1. Valida la existencia de las claves 'llave' y 'values' en el array proporcionado. Si algún de los claves no existe, retorna un error.
-     * 2. Genera los datos `$data_in` basados en el array dado. Si ocurre un error mientras se genera `$data_in`, retorna un error.
-     * 3. Genera la cadena SQL para la cláusula IN basado en `$data_in`. Si ocurre un error mientras se genera la cláusula SQL IN, retorna un error.
-     * 4. Si todos los pasos anteriores se completan con éxito, retorna la cadena SQL para la cláusula IN.
+     * @param array $in Estructura que contiene al menos `'llave'` y `'values'`:
+     *                  - `'llave'`:  Nombre de la columna para la cláusula IN.
+     *                  - `'values'`: Array con los valores que formarán parte del IN.
      *
-     * @param array $in  'llave': string, 'values': array } Array asociativo con las claves 'llave' y 'values'
-     * @return string|array Retorna una cadena SQL para la cláusula IN si no hubo errores. En caso de error, devuelve un array que describe el error.
+     * @return array|string Retorna:
+     *  - El string con la cláusula IN (p.ej. `"categoria_id IN ('10','20','30')"`),
+     *  - o un arreglo con información del error si alguna validación falla.
      *
-     * @example genera_in(['llave' => 'id', 'values' => [1, 2, 3]]) retorna 'id IN (1,2,3)'
+     * @example
+     *  Ejemplo 1: Generar IN con datos válidos
+     *  --------------------------------------------------------------------------------------
+     *  $in = [
+     *      'llave'  => 'categoria_id',
+     *      'values' => ['10', '20', '30']
+     *  ];
      *
-     * @version 16.293.1
-     * @url https://github.com/gamboamartin/where/wiki/src.where.genera_in
+     *  // Flujo:
+     *  //  1. Se verifica que existan 'llave' y 'values'.
+     *  //  2. data_in() valida que 'values' sea un array y retorna un stdClass con llaves y valores.
+     *  //  3. in_sql() genera algo como "categoria_id IN ('10','20','30')".
+     *  // Si todo va bien, se retorna la cadena.
+     *
+     *  $resultado = $this->genera_in($in);
+     *  // $resultado: "categoria_id IN ('10','20','30')"
+     *
+     * @example
+     *  Ejemplo 2: Falta la clave 'values'
+     *  --------------------------------------------------------------------------------------
+     *  $in = [
+     *      'llave' => 'categoria_id'
+     *      // falta 'values'
+     *  ];
+     *
+     *  $resultado = $this->genera_in($in);
+     *  // Retornará un arreglo de error indicando que 'values' no existe.
+     *
+     * @example
+     *  Ejemplo 3: 'values' no es un array
+     *  --------------------------------------------------------------------------------------
+     *  $in = [
+     *      'llave'  => 'categoria_id',
+     *      'values' => 'no_es_array'
+     *  ];
+     *
+     *  $resultado = $this->genera_in($in);
+     *  // Retorna un arreglo de error indicando "Error values debe ser un array".
      */
     final public function genera_in(array $in): array|string
     {
-        $keys = array('llave','values');
-        $valida = $this->validacion->valida_existencia_keys( keys:$keys, registro: $in);
-        if(errores::$error){
-            return $this->error->error(mensaje: 'Error al validar not_in',data: $valida);
+        // 1. Verifica que existan las claves 'llave' y 'values'
+        $keys = ['llave','values'];
+        $valida = $this->validacion->valida_existencia_keys(keys: $keys, registro: $in);
+        if (errores::$error) {
+            return $this->error->error(
+                mensaje: 'Error al validar not_in',
+                data: $valida
+            );
         }
 
+        // 2. Obtén un stdClass con ->llave y ->values, validando que values sea un array
         $data_in = $this->data_in(in: $in);
-        if(errores::$error){
-            return $this->error->error(mensaje: 'Error al generar data in',data: $data_in);
+        if (errores::$error) {
+            return $this->error->error(
+                mensaje: 'Error al generar data in',
+                data: $data_in
+            );
         }
 
-
-        $in_sql = $this->in_sql(llave:  $data_in->llave, values:$data_in->values);
-        if(errores::$error){
-            return $this->error->error(mensaje: 'Error al generar sql',data: $in_sql);
+        // 3. Construye la cláusula IN con llave y values
+        $in_sql = $this->in_sql(llave: $data_in->llave, values: $data_in->values);
+        if (errores::$error) {
+            return $this->error->error(
+                mensaje: 'Error al generar sql',
+                data: $in_sql
+            );
         }
+
         return $in_sql;
     }
+
 
 
 
@@ -1118,51 +1399,103 @@ class where
     }
 
     /**
-     * TOTAL
-     * La función in_sql genera y valida una instrucción SQL IN.
+     * REG
+     * Construye una cláusula SQL `IN ( ... )` a partir de:
      *
-     * @param string $llave El nombre del campo que se utilizará en la instrucción IN.
-     * @param array $values Un array con los valores que se usarán en la instrucción IN.
+     * 1. Un nombre de columna (`$llave`), que no debe estar vacío.
+     * 2. Un arreglo de valores (`$values`) que se convertirán en una cadena con comillas simples
+     *    y comas (por ejemplo: `"'valor1','valor2'"`).
      *
-     * @return array|string Regresa una instrucción SQL IN si todo sale bien.
-     * Regresa un mensaje de error si se detecta algún problema durante la generación o validación del SQL.
+     * - Primero, valida que `$llave` no sea una cadena vacía.
+     * - Luego, convierte `$values` a un string SQL adecuado mediante `values_sql_in($values)`.
+     * - Llama a {@see sql::valida_in()} para verificar la coherencia entre `$llave` y la cadena de valores.
+     * - Finalmente, construye la cláusula IN con {@see sql::in()}, devolviendo algo como:
+     *   `"$llave IN ('valor1','valor2',...)"`
      *
-     * La función sigue los siguientes pasos:
-     * - Primero, verifica que la $llave no sea una cadena vacía.
-     * - Luego, intenta generar una cadena con los valores para la instrucción IN.
-     * - Después valida la instrucción `IN` generada.
-     * - Finalmente, intenta generar una instrucción SQL `IN` completa y la retorna.
+     * Si se presenta algún error en la validación de la llave, la generación de la cadena de valores o la
+     * construcción de la cláusula IN, se retornará un arreglo describiendo el error, generado por
+     * `$this->error->error()`.
      *
-     * Notas:
-     * - Si se encuentra algún error durante el proceso, la función retorna inmediatamente un mensaje de error.
-     * - Cada paso de generación y validación puede disparar un error, así que se comprueba después de cada paso.
+     * @param string $llave  Nombre de la columna para la cláusula IN (no debe estar vacío).
+     * @param array  $values Lista de valores que se convertirán a una cadena SQL.
      *
-     * @version 16.291.1
-     * @url https://github.com/gamboamartin/where/wiki/src.where.in_sql
+     * @return array|string  Retorna la cláusula IN en forma de cadena si todo es correcto, o un arreglo
+     *                       con la información del error en caso contrario.
+     *
+     * @example
+     *  Ejemplo 1: Uso con datos válidos
+     *  ------------------------------------------------------------------------------------
+     *  $llave  = "categoria_id";
+     *  $values = ["10", "20", "30"];
+     *
+     *  $resultado = $this->in_sql($llave, $values);
+     *  // Suponiendo que values_sql_in() genera "'10','20','30'",
+     *  // $resultado podría ser: "categoria_id IN ('10','20','30')".
+     *
+     * @example
+     *  Ejemplo 2: Llave vacía
+     *  ------------------------------------------------------------------------------------
+     *  $llave  = "";
+     *  $values = ["abc"];
+     *
+     *  // Se detecta que la llave está vacía, se retorna un arreglo de error con el mensaje
+     *  // "Error la llave esta vacia".
+     *  $resultado = $this->in_sql($llave, $values);
+     *
+     * @example
+     *  Ejemplo 3: Sin valores en el arreglo
+     *  ------------------------------------------------------------------------------------
+     *  $llave  = "usuario_id";
+     *  $values = [];
+     *
+     *  // Es válido, pero resultará en la cadena de values_sql_in() vacía.
+     *  // Luego, valida_in() detectará que si la llave tiene contenido,
+     *  // $values_sql no debe estar vacío (error).
+     *  $resultado = $this->in_sql($llave, $values);
+     *  // Se retorna un arreglo describiendo el error.
      */
     private function in_sql(string $llave, array $values): array|string
     {
+        // 1. Validar que la llave no esté vacía
         $llave = trim($llave);
-        if($llave === ''){
-            return $this->error->error(mensaje: 'Error la llave esta vacia',data: $llave, es_final: true);
+        if ($llave === '') {
+            return $this->error->error(
+                mensaje: 'Error la llave esta vacia',
+                data: $llave,
+                es_final: true
+            );
         }
 
-        $values_sql = $this->values_sql_in(values:$values);
-        if(errores::$error){
-            return $this->error->error(mensaje: 'Error al generar sql',data: $values_sql);
-        }
-        $valida = (new sql)->valida_in(llave: $llave, values_sql: $values_sql);
-        if(errores::$error){
-            return $this->error->error(mensaje: 'Error al validar in', data: $valida);
+        // 2. Generar la cadena SQL de valores (ej. "'10','20','30'")
+        $values_sql = $this->values_sql_in(values: $values);
+        if (errores::$error) {
+            return $this->error->error(
+                mensaje: 'Error al generar sql',
+                data: $values_sql
+            );
         }
 
-        $in_sql = (new sql())->in(llave: $llave,values_sql:  $values_sql);
-        if(errores::$error){
-            return $this->error->error(mensaje: 'Error al generar sql',data: $in_sql);
+        // 3. Validar coherencia entre llave y cadena de valores
+        $valida = (new sql())->valida_in(llave: $llave, values_sql: $values_sql);
+        if (errores::$error) {
+            return $this->error->error(
+                mensaje: 'Error al validar in',
+                data: $valida
+            );
+        }
+
+        // 4. Construir la cláusula IN
+        $in_sql = (new sql())->in(llave: $llave, values_sql: $values_sql);
+        if (errores::$error) {
+            return $this->error->error(
+                mensaje: 'Error al generar sql',
+                data: $in_sql
+            );
         }
 
         return $in_sql;
     }
+
 
     /**
      * TOTAL
@@ -1201,46 +1534,91 @@ class where
     }
 
     /**
-     * TOTAL
-     * Devuelve una condicion en forma de sql validando si se tiene que precragar un AND o solo la sentencia
-     * @access public
-     * @param string $filtro_rango_sql debe ser un sql con una condicion
-     * @param string $condicion debe ser un sql con una condicion
+     * REG
+     * Ajusta la cadena `$filtro_rango_sql` para añadirle la `$condicion` especificada, separada por `" AND "` si
+     * `$filtro_rango_sql` no está vacío. Además, valida coherencia entre ambos parámetros:
+     *
+     * - Si `$filtro_rango_sql` tiene contenido y `$condicion` está vacío, se considera un error,
+     *   pues no se puede tener un filtro sin condición.
+     * - En caso contrario, si `$filtro_rango_sql` no está vacío, se antepone `" AND "` a la `$condicion`
+     *   mediante el método {@see and_filtro_fecha()}.
+     * - Finalmente, concatena la `$condicion` resultante al final de `$filtro_rango_sql`.
+     *
+     * @param string $condicion        Condición que se desea agregar (por ejemplo, `"fecha >= '2020-01-01'"`).
+     * @param string $filtro_rango_sql Cadena existente a la cual se le añadirá la condición.
+     *                                 Puede estar vacía o contener filtros previos.
+     *
+     * @return array|string Retorna:
+     *  - Un `string` con `$filtro_rango_sql` concatenado a `$condicion`, separado por `" AND "` si corresponde.
+     *  - Un `array` describiendo un error si se detecta incoherencia (por ejemplo, `$filtro_rango_sql` tiene info
+     *    pero `$condicion` está vacío).
+     *
      * @example
-     *      $filtro = setea_filtro_rango('','');
-     *      //return = string ''
-     *      $filtro = setea_filtro_rango('var1 = 1','');
-     *      //return = array errores
-     *      $filtro = setea_filtro_rango('var1 = 1','var2 = 2');
-     *      //return = string 'var1 = 1 AND var2 = 2'
-     *      $filtro = setea_filtro_rango('','var2 = 2');
-     *      //return = string 'var2 = 2'
-     * @return array|string
-     * @throws errores Si $filtro_rango_sql es diferente de vacio y condicion es igual a vacio
-     * @version 16.226.0
-     * @url https://github.com/gamboamartin/where/wiki/src.where.setea_filtro_rango
+     *  Ejemplo 1: `$filtro_rango_sql` vacío, `$condicion` con valor
+     *  ----------------------------------------------------------------------------------
+     *  $filtroRango = "";
+     *  $condicion   = "fecha >= '2023-01-01'";
+     *
+     *  // $filtroRango no tiene contenido, así que no se agrega " AND ".
+     *  // El resultado final es "fecha >= '2023-01-01'".
+     *  $resultado = $this->setea_filtro_rango($condicion, $filtroRango);
+     *  // $resultado => "fecha >= '2023-01-01'"
+     *
+     * @example
+     *  Ejemplo 2: `$filtro_rango_sql` con valor, `$condicion` no vacío
+     *  ----------------------------------------------------------------------------------
+     *  $filtroRango = "id_cliente = 100";
+     *  $condicion   = "fecha >= '2023-01-01'";
+     *
+     *  // Dado que $filtroRango tiene info, se antepone " AND " a la $condicion
+     *  // Resultado: "id_cliente = 100 AND fecha >= '2023-01-01'"
+     *  $resultado = $this->setea_filtro_rango($condicion, $filtroRango);
+     *
+     * @example
+     *  Ejemplo 3: `$filtro_rango_sql` con contenido, `$condicion` vacío
+     *  ----------------------------------------------------------------------------------
+     *  $filtroRango = "id_cliente = 100";
+     *  $condicion   = "";
+     *
+     *  // Retorna un arreglo de error, pues no se permite tener un filtroRango con contenido
+     *  // y condición vacía.
+     *  $resultado = $this->setea_filtro_rango($condicion, $filtroRango);
+     *  // $resultado => [
+     *  //    'error'   => 1,
+     *  //    'mensaje' => "Error if filtro_rango tiene info $condicion no puede venir vacio",
+     *  //    'data'    => "id_cliente = 100",
+     *  //    ...
+     *  // ]
      */
-    private function setea_filtro_rango(string $condicion, string $filtro_rango_sql):array|string
+    private function setea_filtro_rango(string $condicion, string $filtro_rango_sql): array|string
     {
         $filtro_rango_sql = trim($filtro_rango_sql);
         $condicion = trim($condicion);
 
-        if(trim($filtro_rango_sql) !=='' && trim($condicion) === ''){
-
-            return  $this->error->error(mensaje: 'Error if filtro_rango tiene info $condicion no puede venir vacio',
-                data: $filtro_rango_sql, es_final: true);
+        // Verifica que si hay información en $filtro_rango_sql, la condición no esté vacía
+        if ($filtro_rango_sql !== '' && $condicion === '') {
+            return $this->error->error(
+                mensaje: 'Error if filtro_rango tiene info $condicion no puede venir vacio',
+                data: $filtro_rango_sql,
+                es_final: true
+            );
         }
 
+        // Generar posible " AND " entre $filtro_rango_sql y la nueva condición
         $and = $this->and_filtro_fecha(txt: $filtro_rango_sql);
-        if(errores::$error){
-            return $this->error->error(mensaje:'error al integrar and ',data: $and);
+        if (errores::$error) {
+            return $this->error->error(
+                mensaje: 'error al integrar and',
+                data: $and
+            );
         }
 
-
-        $filtro_rango_sql.= $and.$condicion;
+        // Concatena la condición con " AND " si corresponde
+        $filtro_rango_sql .= $and . $condicion;
 
         return $filtro_rango_sql;
     }
+
 
     /**
      * TOTAL
@@ -1713,76 +2091,164 @@ class where
     }
 
     /**
-     * TOTAL
-     * Este método comprueba si el valor proporcionado está vacío y, en caso de que no lo esté,
-     * añade una coma al final de la cadena de valores SQL existente.
+     * REG
+     * Prepara un valor `$value` y determina si debe ir precedido por una coma (`", "`) según el contenido de `$values_sql`.
      *
-     * @param string $value El valor para comprobar y añadir a la cadena SQL.
-     * @param string $values_sql La cadena SQL existente que se actualizará.
+     * - Si `$value` está vacío tras hacer `trim()`, se retorna un arreglo de error generado por `$this->error->error()`.
+     * - En caso contrario, se retorna un objeto `stdClass` con dos propiedades:
+     *   - `value`: El valor de `$value` recortado (sin espacios al inicio y fin).
+     *   - `coma`: Una cadena que contiene `", "` si `$values_sql` no está vacío, o `""` si sí lo está.
      *
-     * @return array|stdClass Devuelve un objeto con el valor y la coma si todo está bien,
-     *                        de lo contrario retorna un mensaje de error.
+     * @param string $value      Valor que se desea formatear y que no puede ser vacío.
+     * @param string $values_sql Cadena previa, que si no está vacía, causará que `coma` sea `", "`.
      *
-     * @throws errores Si el valor está vacío.
-     * @version 16.261.1
-     * @url https://github.com/gamboamartin/where/wiki/src.where.value_coma
+     * @return array|stdClass Retorna:
+     *  - Un `stdClass` con propiedades `value` y `coma` en caso exitoso.
+     *  - Un arreglo que describe un error si `$value` está vacío.
+     *
+     * @example
+     *  Ejemplo 1: `$values_sql` está vacío
+     *  -----------------------------------------------------------------------------
+     *  // Si $values_sql = "" y $value = "nombre", entonces:
+     *  $result = $this->value_coma("nombre", "");
+     *
+     *  // Se retorna un stdClass:
+     *  // {
+     *  //    value: "nombre",
+     *  //    coma:  ""
+     *  // }
+     *
+     * @example
+     *  Ejemplo 2: `$values_sql` no está vacío
+     *  -----------------------------------------------------------------------------
+     *  // Si $values_sql = "id, nombre" y $value = "apellido", entonces:
+     *  $result = $this->value_coma("apellido", "id, nombre");
+     *
+     *  // Se retorna un stdClass:
+     *  // {
+     *  //    value: "apellido",
+     *  //    coma:  " ,"
+     *  // }
+     *  // indicando que se debe concatenar ", apellido" en la sentencia SQL.
+     *
+     * @example
+     *  Ejemplo 3: `$value` está vacío
+     *  -----------------------------------------------------------------------------
+     *  // Si $value = "" (tras un trim) se retorna un arreglo de error.
+     *  $result = $this->value_coma("", "id, nombre");
+     *  // $result será un arreglo con la información del error:
+     *  // [
+     *  //    'error'       => 1,
+     *  //    'mensaje'     => ...,
+     *  //    'data'        => "",
+     *  //    ...
+     *  // ]
      */
     private function value_coma(string $value, string $values_sql): array|stdClass
     {
         $values_sql = trim($values_sql);
         $value = trim($value);
-        if($value === ''){
-            return $this->error->error(mensaje: 'Error value esta vacio',data: $value, es_final: true);
+        if ($value === '') {
+            return $this->error->error(
+                mensaje: 'Error value esta vacio',
+                data: $value,
+                es_final: true
+            );
         }
 
         $coma = '';
-        if($values_sql !== ''){
+        if ($values_sql !== '') {
             $coma = ' ,';
         }
 
         $data = new stdClass();
         $data->value = $value;
-        $data->coma = $coma;
+        $data->coma  = $coma;
         return $data;
     }
 
+
     /**
-     * TOTAL
-     * Esta función publica toma un array de valores y los procesa para formar una parte de una consulta SQL.
+     * REG
+     * Construye una cadena de valores para una sentencia SQL `IN(...)` a partir de un arreglo de valores.
      *
-     * Recorre cada valor en el conjunto de valores proporcionado para escapar y formatear correctamente el valor en
-     * una representación de cadena que puede ser utilizada en una consulta SQL.
-     * Los valores son escapados para seguridad y entre comillas para representarlos como cadenas en SQL.
-     * Finalmente, cada valor procesado se concatena a la cadena $values_sql con una coma y el valor.
+     * - Itera sobre cada elemento de `$values`, validando que no sea una cadena vacía tras `trim()`.
+     * - Cada valor válido se formatea escapándolo con `addslashes()` y rodeándolo con comillas simples (`'...'`).
+     * - Se agrega una coma (`, `) antes del valor si ya hay contenido previo en la cadena `$values_sql`.
+     * - Si en algún punto se detecta un valor vacío o se produce un error en la función auxiliar `value_coma()`,
+     *   se retorna un arreglo con los detalles del error.
+     * - Si todo es correcto, retorna un string adecuado para usarse en una cláusula `IN(...)` de SQL.
      *
-     * Si ocurre algún error durante este proceso, se devolverá un mensaje de error.
+     * @param array $values Lista de valores que se convertirán en una cadena de texto para un `IN`.
      *
-     * @param array $values Un conjunto de valores que se deben formatear y escapar para su uso en una consulta SQL.
-     * @return string|array Una cadena que representa la parte de una consulta SQL con valores formateados y escapados,
-     * o un mensaje de error si se encuentra algún problema.
-     * @version 16.262.1
-     * @url https://github.com/gamboamartin/where/wiki/src.where.values_sql_in
+     * @return string|array Retorna:
+     *  - Un `string` con los valores formateados y separados por comas (p. ej. `'valor1','valor2','valor3'`).
+     *  - Un `array` de error en caso de encontrar valores vacíos o fallos internos.
+     *
+     * @example
+     *  Ejemplo 1: Lista con valores válidos
+     *  -----------------------------------------------------------------------------------
+     *  $values = ['apple', 'banana', 'cherry'];
+     *  $resultado = $this->values_sql_in($values);
+     *  // $resultado podría ser "'apple','banana','cherry'".
+     *  // Útil en una sentencia: "SELECT * FROM tabla WHERE columna IN ($resultado)"
+     *
+     * @example
+     *  Ejemplo 2: Algún valor vacío
+     *  -----------------------------------------------------------------------------------
+     *  $values = ['apple', '', 'cherry'];
+     *  // Se detecta que uno de los valores está vacío, se retorna un arreglo de error
+     *  $resultado = $this->values_sql_in($values);
+     *  // Retornará algo como:
+     *  // [
+     *  //    'error'   => 1,
+     *  //    'mensaje' => 'Error value esta vacio',
+     *  //    'data'    => '',
+     *  //    ...
+     *  // ]
+     *
+     * @example
+     *  Ejemplo 3: Aplicar a un WHERE IN
+     *  -----------------------------------------------------------------------------------
+     *  $values = ['10', '20', '30'];
+     *  $inList = $this->values_sql_in($values); // "'10','20','30'"
+     *  $sql = "SELECT * FROM productos WHERE id IN ($inList)";
+     *  // Resultado:
+     *  // SELECT * FROM productos WHERE id IN ('10','20','30')
      */
     final public function values_sql_in(array $values): string|array
     {
         $values_sql = '';
-        foreach ($values as $value){
+        foreach ($values as $value) {
             $value = trim($value);
-            if($value === ''){
-                return $this->error->error(mensaje: 'Error value esta vacio',data: $value, es_final: true);
-            }
-            $data = $this->value_coma(value:$value, values_sql: $values_sql);
-            if(errores::$error){
-                return $this->error->error(mensaje: 'Error obtener datos de value',data: $data);
+            if ($value === '') {
+                return $this->error->error(
+                    mensaje: 'Error value esta vacio',
+                    data: $value,
+                    es_final: true
+                );
             }
 
+            // Llama a value_coma() para determinar si debe precederse de coma
+            $data = $this->value_coma(value: $value, values_sql: $values_sql);
+            if (errores::$error) {
+                return $this->error->error(
+                    mensaje: 'Error obtener datos de value',
+                    data: $data
+                );
+            }
+
+            // Escapa el valor y lo envuelve en comillas simples
             $value = addslashes($value);
             $value = "'$value'";
 
-            $values_sql.="$data->coma$value";
+            // Concatena coma si corresponde y el valor final
+            $values_sql .= "$data->coma$value";
         }
+
         return $values_sql;
     }
+
 
     /**
      * TOTAL
