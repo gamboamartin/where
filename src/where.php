@@ -74,30 +74,70 @@ class where
 
 
     /**
-     * TOTAL
-     * Esta función asigna una serie de filtros SQL a un objeto stdClass y retorna este objeto.
-     * Cada filtro es una cadena de texto formateada como una sentencia SQL.
+     * REG
+     * Asigna datos relacionados con diferentes filtros SQL en un objeto `stdClass`.
      *
-     * @param string $diferente_de_sql     La sentencia SQL para el filtro 'diferente_de'.
-     * @param string $filtro_especial_sql  La sentencia SQL para el filtro especial.
-     * @param string $filtro_extra_sql     La sentencia SQL para el filtro extra.
-     * @param string $filtro_fecha_sql     La sentencia SQL para el filtro de fecha.
-     * @param string $filtro_rango_sql     La sentencia SQL para el filtro de rango.
-     * @param string $in_sql               La sentencia SQL para el filtro 'IN'.
-     * @param string $not_in_sql           La sentencia SQL para el filtro 'NOT IN'.
-     * @param string $sentencia            La sentencia SQL completa.
-     * @param string $sql_extra            Cualquier sentencia SQL extra.
+     * Este método organiza y asigna múltiples cláusulas y condiciones SQL en propiedades de un objeto,
+     * facilitando el manejo estructurado de filtros complejos en consultas SQL.
      *
-     * @return stdClass El objeto que contiene todos los filtros SQL.
-     * @url https://github.com/gamboamartin/where/wiki/src.where.asigna_data_filtro
+     * @param string $diferente_de_sql   Cláusula SQL para valores diferentes (`NOT EQUAL`).
+     * @param string $filtro_especial_sql Cláusula SQL para filtros especiales personalizados.
+     * @param string $filtro_extra_sql   Cláusula SQL para filtros adicionales.
+     * @param string $filtro_fecha_sql   Cláusula SQL para filtros basados en fechas.
+     * @param string $filtro_rango_sql   Cláusula SQL para filtros de rango.
+     * @param string $in_sql             Cláusula SQL `IN`.
+     * @param string $not_in_sql         Cláusula SQL `NOT IN`.
+     * @param string $sentencia          Sentencia principal SQL generada.
+     * @param string $sql_extra          SQL adicional que puede ser integrado a la consulta.
+     *
+     * @return stdClass Objeto con las siguientes propiedades asignadas:
+     *  - `sentencia`: Sentencia principal SQL.
+     *  - `filtro_especial`: Cláusula de filtros especiales.
+     *  - `filtro_rango`: Cláusula de rango.
+     *  - `filtro_extra`: Filtros adicionales.
+     *  - `in`: Cláusula `IN`.
+     *  - `not_in`: Cláusula `NOT IN`.
+     *  - `diferente_de`: Cláusula para valores diferentes.
+     *  - `sql_extra`: SQL adicional.
+     *  - `filtro_fecha`: Filtros basados en fechas.
+     *
+     * @example
+     *  Ejemplo 1: Asignar diferentes filtros en un objeto
+     *  -------------------------------------------------------------------------
+     *  $diferente_de_sql = "campo1 != 'valor1'";
+     *  $filtro_especial_sql = "campo2 = 'valor2'";
+     *  $filtro_extra_sql = "campo3 LIKE '%valor3%'";
+     *  $filtro_fecha_sql = "fecha >= '2023-01-01'";
+     *  $filtro_rango_sql = "campo4 BETWEEN '10' AND '20'";
+     *  $in_sql = "campo5 IN ('1', '2', '3')";
+     *  $not_in_sql = "campo6 NOT IN ('4', '5', '6')";
+     *  $sentencia = "SELECT * FROM tabla";
+     *  $sql_extra = "ORDER BY campo1 ASC";
+     *
+     *  $resultado = $this->asigna_data_filtro(
+     *      $diferente_de_sql, $filtro_especial_sql, $filtro_extra_sql,
+     *      $filtro_fecha_sql, $filtro_rango_sql, $in_sql, $not_in_sql, $sentencia, $sql_extra
+     *  );
+     *
+     *  // Retorna un objeto con las propiedades asignadas:
+     *  // $resultado->sentencia = "SELECT * FROM tabla";
+     *  // $resultado->filtro_especial = "campo2 = 'valor2'";
+     *  // $resultado->filtro_rango = "campo4 BETWEEN '10' AND '20'";
+     *  // ...
      */
-   final public function asigna_data_filtro(string $diferente_de_sql, string $filtro_especial_sql,
-                                                string $filtro_extra_sql, string $filtro_fecha_sql,
-                                                string $filtro_rango_sql, string $in_sql, string $not_in_sql,
-                                                string $sentencia, string $sql_extra): stdClass
-    {
+    final public function asigna_data_filtro(
+        string $diferente_de_sql,
+        string $filtro_especial_sql,
+        string $filtro_extra_sql,
+        string $filtro_fecha_sql,
+        string $filtro_rango_sql,
+        string $in_sql,
+        string $not_in_sql,
+        string $sentencia,
+        string $sql_extra
+    ): stdClass {
         $filtros = new stdClass();
-        $filtros->sentencia = $sentencia ;
+        $filtros->sentencia = $sentencia;
         $filtros->filtro_especial = $filtro_especial_sql;
         $filtros->filtro_rango = $filtro_rango_sql;
         $filtros->filtro_extra = $filtro_extra_sql;
@@ -106,27 +146,74 @@ class where
         $filtros->diferente_de = $diferente_de_sql;
         $filtros->sql_extra = $sql_extra;
         $filtros->filtro_fecha = $filtro_fecha_sql;
+
         return $filtros;
     }
 
+
     /**
-     * TOTAL
-     * Esta función procesa las entradas proporcionadas y devuelve el "campo" apropiado.
+     * REG
+     * Obtiene el valor de un campo desde un arreglo o utiliza el valor de `$key` como valor predeterminado.
      *
-     * @param array|string|null $data los datos proporcionados para extraer el campo. Pueden ser de tipos array, string o null.
-     * @param string $key la clave proporcionada para extraer el campo del array.
-     * @return string|array Devuelve el "campo" después de ser procesado y garantiza que no contenga caracteres de escape.
+     * - Si `$key` está vacío, se considera un error y se retorna un arreglo con los detalles del error.
+     * - Si `$data` es un arreglo y contiene la clave `'campo'`, se retorna el valor de esa clave con `addslashes()` aplicado.
+     * - Si no existe la clave `'campo'` en `$data`, se retorna `$key` como el valor predeterminado.
+     * - En cualquier caso, el valor retornado tiene escapados los caracteres especiales mediante `addslashes()`.
      *
-     * @throws errores si la clave proporcionada está vacía.
-     * @url https://github.com/gamboamartin/where/wiki/src.where.campo
+     * @param array|string|null $data Arreglo de datos del cual se intentará obtener el valor del campo `'campo'`.
+     * @param string            $key  Clave predeterminada que se retornará si no se encuentra `'campo'` en `$data`.
+     *
+     * @return string|array Retorna:
+     *  - Un `string` con el valor escapado del campo.
+     *  - Un arreglo de error si `$key` está vacío.
+     *
+     * @example
+     *  Ejemplo 1: `$data` contiene `'campo'`
+     *  ---------------------------------------------------------------------
+     *  $data = ['campo' => "nombre"];
+     *  $key = "predeterminado";
+     *  $resultado = $this->campo($data, $key);
+     *  // $resultado será "nombre" (con escapado de caracteres especiales si aplica).
+     *
+     * @example
+     *  Ejemplo 2: `$data` no contiene `'campo'`
+     *  ---------------------------------------------------------------------
+     *  $data = ['otro_campo' => "valor"];
+     *  $key = "predeterminado";
+     *  $resultado = $this->campo($data, $key);
+     *  // $resultado será "predeterminado" (escapado si aplica).
+     *
+     * @example
+     *  Ejemplo 3: `$key` vacío
+     *  ---------------------------------------------------------------------
+     *  $data = ['campo' => "nombre"];
+     *  $key = "";
+     *  $resultado = $this->campo($data, $key);
+     *  // Retorna un arreglo de error:
+     *  // [
+     *  //   'error'   => 1,
+     *  //   'mensaje' => "Error key vacio",
+     *  //   'data'    => ""
+     *  // ]
      */
-    private function campo(array|string|null $data, string $key):string|array{
-        if($key === ''){
-            return $this->error->error(mensaje: "Error key vacio",data:  $key, es_final: true);
+    private function campo(array|string|null $data, string $key): string|array
+    {
+        // Validar que la clave no sea vacía
+        if ($key === '') {
+            return $this->error->error(
+                mensaje: "Error key vacio",
+                data: $key,
+                es_final: true
+            );
         }
+
+        // Obtener el valor de 'campo' o utilizar $key como predeterminado
         $campo = $data['campo'] ?? $key;
+
+        // Retornar el valor escapado con addslashes
         return addslashes($campo);
     }
+
 
     /**
      * TOTAL
@@ -192,72 +279,170 @@ class where
     }
 
     /**
-     * TOTAL
-     * Función que realiza una comparación.
+     * REG
+     * Obtiene el valor de comparación desde los datos proporcionados o utiliza un valor predeterminado si no está definido.
      *
-     * Esta función toma un array, cadena de texto, o valor null como datos de entrada,
-     * junto con una cadena de texto por defecto. Revisa si hay una llave 'comparacion'
-     * en los datos de entrada y, si la hay, retorna su valor. Si no hay tal llave,
-     * la función retorna la cadena de texto por defecto.
+     * - Si `$data` es un array y contiene la clave `'comparacion'`, retorna su valor.
+     * - Si la clave `'comparacion'` no existe en `$data`, retorna el valor predeterminado `$default`.
      *
-     * @param array|string|null $data Los datos de entrada para la comparación.
-     * @param string $default La cadena de texto por defecto a retornar si la llave 'comparacion' no se encuentra.
-     * @return string El resultado de la comparación, o la cadena por defecto si no hay comparación.
-     * @version 16.96.0
-     * @url https://github.com/gamboamartin/where/wiki/src.where.comparacion
+     * @param array|string|null $data    Datos desde los cuales se intentará obtener el valor de `'comparacion'`.
+     * @param string            $default Valor predeterminado que se utilizará si `'comparacion'` no está definido en `$data`.
+     *
+     * @return string Retorna el valor de `'comparacion'` si está definido en `$data`. De lo contrario, retorna `$default`.
+     *
+     * @example
+     *  Ejemplo 1: `$data` contiene la clave 'comparacion'
+     *  ---------------------------------------------------------------------
+     *  $data = ['comparacion' => 'igual'];
+     *  $default = 'diferente';
+     *
+     *  $resultado = $this->comparacion($data, $default);
+     *  // Retorna: "igual".
+     *
+     * @example
+     *  Ejemplo 2: `$data` no contiene la clave 'comparacion'
+     *  ---------------------------------------------------------------------
+     *  $data = ['otro_campo' => 'valor'];
+     *  $default = 'diferente';
+     *
+     *  $resultado = $this->comparacion($data, $default);
+     *  // Retorna: "diferente".
+     *
+     * @example
+     *  Ejemplo 3: `$data` es null
+     *  ---------------------------------------------------------------------
+     *  $data = null;
+     *  $default = 'diferente';
+     *
+     *  $resultado = $this->comparacion($data, $default);
+     *  // Retorna: "diferente".
+     *
+     * @example
+     *  Ejemplo 4: `$data` como cadena
+     *  ---------------------------------------------------------------------
+     *  $data = 'texto';
+     *  $default = 'diferente';
+     *
+     *  $resultado = $this->comparacion($data, $default);
+     *  // Retorna: "diferente", ya que no es un array.
      */
-    private function comparacion(array|string|null $data, string $default):string{
+    private function comparacion(array|string|null $data, string $default): string
+    {
+        // Retorna el valor de 'comparacion' si existe en $data, de lo contrario $default
         return $data['comparacion'] ?? $default;
     }
 
-    /**
-     * TOTAL
-     * La función comparacion_pura compara los datos pasados con las columnas extra en base a una llave.
-     *
-     * @param array $columnas_extra Las columnas extra a considerar en la comparación.
-     * @param array|string|null $data Los datos que se van a comparar con las columnas extra, puede ser un array,
-     *  un string o nulo.
-     * @param string $key La llave que se usará en la comparación.
-     *
-     * @return array|stdClass Retorna un objeto con los resultados de la comparación, si se encuentra algún error
-     *  durante la comparación,
-     * se retornará un objeto con información del error.
-     *
-     * @throws errores Si la llave esta vacía.
-     * @throws errores Si los datos están vacíos.
-     * @throws errores Si hay un error al maquetar el campo con los datos y la llave.
-     * @throws errores Si hay un error al validar la maquetación.
-     * @version 16.99.0
-     * @url https://github.com/gamboamartin/where/wiki/src.where.comparacion_pura
-     *
-     */
-    private function comparacion_pura(array $columnas_extra, array|string|null $data, string $key):array|stdClass{
 
-        if($key === ''){
-            return $this->error->error(mensaje: "Error key vacio", data: $key, es_final: true);
+    /**
+     * REG
+     * Realiza una validación y procesamiento de datos para comparar una clave y su valor, considerando columnas adicionales si están presentes.
+     *
+     * Este método:
+     * 1. **Validación de la clave (`$key`)**:
+     *    - Si está vacía, retorna un error.
+     * 2. **Validación de los datos (`$data`)**:
+     *    - Si es un array vacío, retorna un error.
+     * 3. **Maquetación de datos**:
+     *    - Construye el campo y el valor utilizando los métodos {@see campo()} y {@see value()}.
+     *    - Aplica validaciones durante el proceso.
+     * 4. **Consideración de columnas adicionales**:
+     *    - Si `$key` existe en `$columnas_extra`, sustituye el campo generado por el valor correspondiente en `$columnas_extra`.
+     *
+     * @param array               $columnas_extra Array asociativo de columnas adicionales donde la clave es el nombre del campo.
+     * @param array|string|null   $data           Datos de entrada que contienen el campo y/o el valor a procesar.
+     * @param string              $key            Clave que identifica el campo a procesar y validar.
+     *
+     * @return array|stdClass Retorna:
+     *  - Un objeto `stdClass` con las propiedades:
+     *      - `campo`: Campo procesado y validado (posiblemente sobrescrito por `$columnas_extra`).
+     *      - `value`: Valor procesado y validado.
+     *  - Un arreglo de error si alguna validación falla.
+     *
+     * @example
+     *  Ejemplo 1: Procesar datos válidos
+     *  -----------------------------------------------------------------------
+     *  $columnas_extra = ['campo_extra' => 'tabla.campo_extra'];
+     *  $data = ['campo' => 'id_usuario', 'value' => 123];
+     *  $key = 'campo_extra';
+     *
+     *  $resultado = $this->comparacion_pura($columnas_extra, $data, $key);
+     *  // Retorna un objeto stdClass con:
+     *  // $resultado->campo => 'tabla.campo_extra'
+     *  // $resultado->value => '123' (escapado con addslashes)
+     *
+     * @example
+     *  Ejemplo 2: Error por clave vacía
+     *  -----------------------------------------------------------------------
+     *  $columnas_extra = ['campo_extra' => 'tabla.campo_extra'];
+     *  $data = ['campo' => 'id_usuario', 'value' => 123];
+     *  $key = '';
+     *
+     *  $resultado = $this->comparacion_pura($columnas_extra, $data, $key);
+     *  // Retorna un arreglo de error indicando "Error key vacio".
+     *
+     * @example
+     *  Ejemplo 3: Error por datos vacíos
+     *  -----------------------------------------------------------------------
+     *  $columnas_extra = ['campo_extra' => 'tabla.campo_extra'];
+     *  $data = [];
+     *  $key = 'campo_extra';
+     *
+     *  $resultado = $this->comparacion_pura($columnas_extra, $data, $key);
+     *  // Retorna un arreglo de error indicando "Error datos vacio".
+     */
+    private function comparacion_pura(array $columnas_extra, array|string|null $data, string $key): array|stdClass
+    {
+        // Validar que la clave no esté vacía
+        if ($key === '') {
+            return $this->error->error(
+                mensaje: "Error key vacio",
+                data: $key,
+                es_final: true
+            );
         }
-        if(is_array($data) && count($data) === 0){
-            return $this->error->error(mensaje:"Error datos vacio",data: $data, es_final: true);
+
+        // Validar que los datos no sean un array vacío
+        if (is_array($data) && count($data) === 0) {
+            return $this->error->error(
+                mensaje: "Error datos vacio",
+                data: $data,
+                es_final: true
+            );
         }
+
+        // Maquetar el campo utilizando el método `campo`
         $datas = new stdClass();
-        $datas->campo = $this->campo(data: $data,key:  $key);
-        if(errores::$error){
-            return $this->error->error(mensaje:"Error al maquetar campo",data: $datas->campo);
+        $datas->campo = $this->campo(data: $data, key: $key);
+        if (errores::$error) {
+            return $this->error->error(
+                mensaje: "Error al maquetar campo",
+                data: $datas->campo
+            );
         }
+
+        // Maquetar el valor utilizando el método `value`
         $datas->value = $this->value(data: $data);
-        if(errores::$error){
-            return $this->error->error(mensaje:"Error al validar maquetacion",data: $datas->value);
+        if (errores::$error) {
+            return $this->error->error(
+                mensaje: "Error al validar maquetacion",
+                data: $datas->value
+            );
         }
+
+        // Verificar si la clave está presente en `$columnas_extra`
         $es_sq = false;
-        if(isset($columnas_extra[$key])){
+        if (isset($columnas_extra[$key])) {
             $es_sq = true;
         }
-        if($es_sq){
+
+        // Sobrescribir el campo si está en `$columnas_extra`
+        if ($es_sq) {
             $datas->campo = $columnas_extra[$key];
         }
 
         return $datas;
     }
+
 
     /**
      * REG
@@ -990,109 +1175,234 @@ class where
 
 
     /**
-     * TOTAL
-     * Esta función genera una cadena de declaración SQL AND basada en los filtros y columnas extras proporcionados.
+     * REG
+     * Genera una cláusula SQL con operadores lógicos (`AND`, `OR`) y condiciones de comparación, basándose en un conjunto de filtros.
      *
-     * @param array $columnas_extra Las columnas adicionales que han de considerarse al generar la declaración SQL.
-     * @param array $filtro Los filtros que se utilizarán para la generación de la declaración SQL.
+     * Este método:
+     * 1. **Validación de claves**:
+     *    - Cada clave en `$filtro` debe ser un campo asociativo en formato `tabla.campo`. No se permiten claves numéricas.
+     * 2. **Construcción de la cláusula**:
+     *    - Para cada filtro:
+     *      - Genera el campo y el valor utilizando {@see comparacion_pura()}.
+     *      - Obtiene el operador de comparación (por ejemplo, `'='`) utilizando {@see comparacion()}.
+     *      - Valida y utiliza el operador lógico (`AND` o `OR`).
+     *    - Concatena las condiciones en una cláusula SQL.
+     * 3. **Errores**:
+     *    - Si alguna validación falla, se retorna un arreglo con los detalles del error.
      *
-     * @return string|array Retornará una cadena que es la declaración SQL AND generada. Si ocurre algún error al
-     * procesar, retornará un objeto de error.
+     * @param array $columnas_extra Columnas adicionales que pueden sobrescribir los valores de campo.
+     * @param array $filtro         Filtros que definen las condiciones de comparación.
+     *                              Cada entrada debe tener:
+     *                              - Clave: El nombre del campo (por ejemplo, `tabla.campo`).
+     *                              - Valor: Un array con posibles claves:
+     *                                  - `'value'`: El valor a comparar.
+     *                                  - `'comparacion'`: El operador de comparación (por defecto `'='`).
+     *                                  - `'operador'`: Operador lógico para unir condiciones (`AND`, `OR`).
      *
-     * @throws errores si hay algún problema con los filtros o columnas proporcionados.
-     * @version 16.100.0
-     * @url https://github.com/gamboamartin/where/wiki/src.where.genera_and
+     * @return array|string Retorna:
+     *  - Un string con la cláusula SQL generada.
+     *  - Un arreglo de error si alguna validación falla.
+     *
+     * @example
+     *  Ejemplo 1: Generar una cláusula AND
+     *  -----------------------------------------------------------------------------
+     *  $columnas_extra = ['usuario_id' => 'tabla.usuario_id'];
+     *  $filtro = [
+     *      'tabla.usuario_id' => ['value' => 123, 'comparacion' => '=', 'operador' => 'AND'],
+     *      'tabla.status' => ['value' => 'activo', 'comparacion' => '=', 'operador' => 'AND']
+     *  ];
+     *
+     *  $resultado = $this->genera_and($columnas_extra, $filtro);
+     *  // Retorna: "tabla.usuario_id = '123' AND tabla.status = 'activo'"
+     *
+     * @example
+     *  Ejemplo 2: Error por clave numérica
+     *  -----------------------------------------------------------------------------
+     *  $columnas_extra = [];
+     *  $filtro = [
+     *      0 => ['value' => 123, 'comparacion' => '=']
+     *  ];
+     *
+     *  $resultado = $this->genera_and($columnas_extra, $filtro);
+     *  // Retorna un arreglo de error indicando que las claves deben ser campos asociativos.
+     *
+     * @example
+     *  Ejemplo 3: Uso del operador OR
+     *  -----------------------------------------------------------------------------
+     *  $columnas_extra = [];
+     *  $filtro = [
+     *      'tabla.usuario_id' => ['value' => 123, 'comparacion' => '=', 'operador' => 'OR'],
+     *      'tabla.status' => ['value' => 'activo', 'comparacion' => '=', 'operador' => 'OR']
+     *  ];
+     *
+     *  $resultado = $this->genera_and($columnas_extra, $filtro);
+     *  // Retorna: "tabla.usuario_id = '123' OR tabla.status = 'activo'"
      */
-    final public function genera_and(array $columnas_extra, array $filtro):array|string{
+    final public function genera_and(array $columnas_extra, array $filtro): array|string
+    {
         $sentencia = '';
+
         foreach ($filtro as $key => $data) {
-            if(is_numeric($key)){
+            // Validar que las claves sean asociativas
+            if (is_numeric($key)) {
                 return $this->error->error(
-                    mensaje: 'Los key deben de ser campos asociativos con referencia a tabla.campo',data: $filtro,
-                    es_final: true);
+                    mensaje: 'Los key deben de ser campos asociativos con referencia a tabla.campo',
+                    data: $filtro,
+                    es_final: true
+                );
             }
+
+            // Generar el campo y valor de comparación
             $data_comparacion = $this->comparacion_pura(columnas_extra: $columnas_extra, data: $data, key: $key);
-            if(errores::$error){
-                return $this->error->error(mensaje:"Error al maquetar campo",data:$data_comparacion);
+            if (errores::$error) {
+                return $this->error->error(
+                    mensaje: "Error al maquetar campo",
+                    data: $data_comparacion
+                );
             }
 
-            $comparacion = $this->comparacion(data: $data,default: '=');
-            if(errores::$error){
-                return $this->error->error(mensaje:"Error al maquetar",data:$comparacion);
+            // Determinar el operador de comparación
+            $comparacion = $this->comparacion(data: $data, default: '=');
+            if (errores::$error) {
+                return $this->error->error(
+                    mensaje: "Error al maquetar",
+                    data: $comparacion
+                );
             }
 
+            // Validar y obtener el operador lógico
             $operador = $data['operador'] ?? ' AND ';
-            if(trim($operador) !=='AND' && trim($operador) !=='OR'){
-                return $this->error->error(mensaje:'El operador debe ser AND u OR',data:$operador, es_final: true);
+            if (trim($operador) !== 'AND' && trim($operador) !== 'OR') {
+                return $this->error->error(
+                    mensaje: 'El operador debe ser AND u OR',
+                    data: $operador,
+                    es_final: true
+                );
             }
 
+            // Construir la sentencia SQL
             $data_sql = "$data_comparacion->campo $comparacion '$data_comparacion->value'";
-
-            $sentencia .= $sentencia === ''? $data_sql :" $operador $data_sql";
+            $sentencia .= $sentencia === '' ? $data_sql : " $operador $data_sql";
         }
 
         return $sentencia;
-
     }
+
 
 
 
     /**
-     * TOTAL
-     * Genera y gestiona sentencias AND para operaciones SQL.
-     * La función procesa el filtro y las columnas adicionales proporcionadas para generar una sentencia SQL AND.
+     * REG
+     * Genera una cláusula SQL con operadores lógicos (`AND`, `OR`) y condiciones de comparación basadas en textos.
      *
-     * @param array $columnas_extra Columnas adicionales para usar en la generación de sentencias.
-     * @param array $filtro Los filtros que se aplicarán a la sentencia SQL.
-     * @return array|string Devuelve una sentencia SQL estructurada como un string.
+     * Este método:
+     * 1. **Validación de claves**:
+     *    - Cada clave en `$filtro` debe ser un campo asociativo en formato `tabla.campo`. No se permiten claves numéricas.
+     * 2. **Construcción de la cláusula**:
+     *    - Para cada filtro:
+     *      - Genera el campo y el valor utilizando {@see comparacion_pura()}.
+     *      - Obtiene el operador de comparación (por defecto `'LIKE'`) utilizando {@see comparacion()}.
+     *      - Aplica el operador lógico (`AND` o `OR`) y agrega el valor entre porcentajes (`%`), excepto cuando se especifica un operador diferente.
+     * 3. **Errores**:
+     *    - Si alguna validación falla, se retorna un arreglo con los detalles del error.
      *
-     * @throws errores Si los filtros proporcionados tienen claves numéricas.
-     * Las claves deben hacer referencia a campo de una tabla en formato "tabla.campo".
+     * @param array $columnas_extra Columnas adicionales que pueden sobrescribir los valores de campo.
+     * @param array $filtro         Filtros que definen las condiciones de comparación.
+     *                              Cada entrada debe tener:
+     *                              - Clave: El nombre del campo (por ejemplo, `tabla.campo`).
+     *                              - Valor: Un array con posibles claves:
+     *                                  - `'value'`: El valor a comparar.
+     *                                  - `'comparacion'`: El operador de comparación (por defecto `'LIKE'`).
+     *                                  - `'operador'`: Operador lógico para unir condiciones (`AND`, `OR`).
      *
-     * @throws errores Si se produce un error durante la construcción de la sentencia SQL.
+     * @return array|string Retorna:
+     *  - Un string con la cláusula SQL generada.
+     *  - Un arreglo de error si alguna validación falla.
      *
      * @example
-     * genera_and_textos(['columna1', 'columna2'], ['tabla.campo' => 'valor']);
-     * Esto generará una sentencia SQL AND que puede parecerse a "tabla.campo LIKE '%valor%'".
-     * Nota: El operador predeterminado es 'LIKE'.
-     * @version 16.101.0
-     * @url https://github.com/gamboamartin/where/wiki/src.where.genera_and_textos
+     *  Ejemplo 1: Generar cláusula con `LIKE` y operador `AND`
+     *  -----------------------------------------------------------------------------
+     *  $columnas_extra = ['usuario_nombre' => 'tabla.usuario_nombre'];
+     *  $filtro = [
+     *      'tabla.usuario_nombre' => ['value' => 'Juan', 'comparacion' => 'LIKE', 'operador' => 'AND'],
+     *      'tabla.status' => ['value' => 'activo', 'comparacion' => 'LIKE', 'operador' => 'AND']
+     *  ];
+     *
+     *  $resultado = $this->genera_and_textos($columnas_extra, $filtro);
+     *  // Retorna: "tabla.usuario_nombre LIKE '%Juan%' AND tabla.status LIKE '%activo%'"
+     *
+     * @example
+     *  Ejemplo 2: Uso de operador `OR`
+     *  -----------------------------------------------------------------------------
+     *  $columnas_extra = [];
+     *  $filtro = [
+     *      'tabla.usuario_nombre' => ['value' => 'Juan', 'comparacion' => 'LIKE', 'operador' => 'OR'],
+     *      'tabla.status' => ['value' => 'activo', 'comparacion' => 'LIKE', 'operador' => 'OR']
+     *  ];
+     *
+     *  $resultado = $this->genera_and_textos($columnas_extra, $filtro);
+     *  // Retorna: "tabla.usuario_nombre LIKE '%Juan%' OR tabla.status LIKE '%activo%'"
+     *
+     * @example
+     *  Ejemplo 3: Error por clave numérica
+     *  -----------------------------------------------------------------------------
+     *  $columnas_extra = [];
+     *  $filtro = [
+     *      0 => ['value' => 'Juan', 'comparacion' => 'LIKE']
+     *  ];
+     *
+     *  $resultado = $this->genera_and_textos($columnas_extra, $filtro);
+     *  // Retorna un arreglo de error indicando que las claves deben ser campos asociativos.
      */
-    private function genera_and_textos(array $columnas_extra, array $filtro):array|string{
-
+    private function genera_and_textos(array $columnas_extra, array $filtro): array|string
+    {
         $sentencia = '';
+
         foreach ($filtro as $key => $data) {
-            if(is_numeric($key)){
+            // Validar que las claves sean asociativas
+            if (is_numeric($key)) {
                 return $this->error->error(
-                    mensaje: 'Los key deben de ser campos asociativos con referencia a tabla.campo',data: $filtro,
-                    es_final: true);
+                    mensaje: 'Los key deben de ser campos asociativos con referencia a tabla.campo',
+                    data: $filtro,
+                    es_final: true
+                );
             }
 
-            $data_comparacion = $this->comparacion_pura(columnas_extra: $columnas_extra, data: $data,key:  $key);
-            if(errores::$error){
-                return $this->error->error(mensaje: "Error al maquetar",data:$data_comparacion);
+            // Generar el campo y valor de comparación
+            $data_comparacion = $this->comparacion_pura(columnas_extra: $columnas_extra, data: $data, key: $key);
+            if (errores::$error) {
+                return $this->error->error(
+                    mensaje: "Error al maquetar",
+                    data: $data_comparacion
+                );
             }
 
-            $comparacion = $this->comparacion(data: $data,default: 'LIKE');
-            if(errores::$error){
-                return $this->error->error(mensaje:"Error al maquetar",data:$comparacion);
+            // Determinar el operador de comparación
+            $comparacion = $this->comparacion(data: $data, default: 'LIKE');
+            if (errores::$error) {
+                return $this->error->error(
+                    mensaje: "Error al maquetar",
+                    data: $comparacion
+                );
             }
 
+            // Determinar el operador lógico y formato del texto
             $txt = '%';
             $operador = 'AND';
-            if(isset($data['operador']) && $data['operador']!==''){
+            if (isset($data['operador']) && $data['operador'] !== '') {
                 $operador = $data['operador'];
-                $txt= '';
+                $txt = '';
             }
 
-            $sentencia .= $sentencia === ""?"$data_comparacion->campo $comparacion '$txt$data_comparacion->value$txt'":
-                " $operador $data_comparacion->campo $comparacion '$txt$data_comparacion->value$txt'";
+            // Construir la sentencia SQL
+            $sentencia .= $sentencia === ""
+                ? "$data_comparacion->campo $comparacion '$txt$data_comparacion->value$txt'"
+                : " $operador $data_comparacion->campo $comparacion '$txt$data_comparacion->value$txt'";
         }
 
-
         return $sentencia;
-
     }
+
 
     /**
      * TOTAL
@@ -1359,44 +1669,98 @@ class where
     }
 
 
-
-
-
     /**
-     * TOTAL
-     * Genera la sentencia SQL base de filtro según el tipo de filtro
-     * proporcionado (numeros o textos).
+     * REG
+     * Genera una sentencia SQL basada en un conjunto de filtros y un tipo de filtro especificado.
      *
-     * @param array $columnas_extra Array de columnas adicionales para incluir en la consulta.
-     * @param array $filtro Array de condiciones para ser incluidos en la cláusula WHERE de la sentencia.
-     * @param string $tipo_filtro Define el tipo del filtro. Puede ser "numeros" o "textos".
+     * Este método:
+     * 1. **Valida el tipo de filtro**:
+     *    - Llama a {@see verifica_tipo_filtro()} para asegurar que `$tipo_filtro` sea válido (`numeros` o `textos`).
+     * 2. **Construcción de la cláusula SQL**:
+     *    - Si `$tipo_filtro` es `'numeros'`, llama a {@see genera_and()} para generar una cláusula con condiciones basadas en números.
+     *    - Si `$tipo_filtro` es `'textos'`, llama a {@see genera_and_textos()} para generar una cláusula con condiciones basadas en textos.
+     * 3. **Errores**:
+     *    - Si falla alguna validación o generación, se retorna un arreglo con los detalles del error.
      *
-     * @return array|string Retorna la sentencia generada o un string describiendo un error si sucede alguno.
+     * @param array  $columnas_extra Columnas adicionales que pueden sobrescribir los valores de campo.
+     * @param array  $filtro         Filtros que definen las condiciones de comparación.
+     * @param string $tipo_filtro    Tipo de filtro a aplicar (`numeros` o `textos`).
      *
-     * @throws errores si el tipo de filtro no es válido.
-     * @version 16.102.0
-     * @url https://github.com/gamboamartin/where/wiki/src.where.genera_sentencia_base
+     * @return array|string Retorna:
+     *  - Un string con la sentencia SQL generada.
+     *  - Un arreglo de error si alguna validación falla.
+     *
+     * @example
+     *  Ejemplo 1: Generar sentencia con tipo de filtro "numeros"
+     *  -----------------------------------------------------------------------------
+     *  $columnas_extra = ['id' => 'tabla.id'];
+     *  $filtro = [
+     *      'tabla.id' => ['value' => 123, 'comparacion' => '=', 'operador' => 'AND'],
+     *      'tabla.status' => ['value' => 1, 'comparacion' => '=', 'operador' => 'AND']
+     *  ];
+     *  $tipo_filtro = 'numeros';
+     *
+     *  $resultado = $this->genera_sentencia_base($columnas_extra, $filtro, $tipo_filtro);
+     *  // Retorna: "tabla.id = '123' AND tabla.status = '1'"
+     *
+     * @example
+     *  Ejemplo 2: Generar sentencia con tipo de filtro "textos"
+     *  -----------------------------------------------------------------------------
+     *  $columnas_extra = [];
+     *  $filtro = [
+     *      'tabla.nombre' => ['value' => 'Juan', 'comparacion' => 'LIKE', 'operador' => 'AND'],
+     *      'tabla.status' => ['value' => 'activo', 'comparacion' => 'LIKE', 'operador' => 'AND']
+     *  ];
+     *  $tipo_filtro = 'textos';
+     *
+     *  $resultado = $this->genera_sentencia_base($columnas_extra, $filtro, $tipo_filtro);
+     *  // Retorna: "tabla.nombre LIKE '%Juan%' AND tabla.status LIKE '%activo%'"
+     *
+     * @example
+     *  Ejemplo 3: Error en tipo de filtro
+     *  -----------------------------------------------------------------------------
+     *  $columnas_extra = [];
+     *  $filtro = [];
+     *  $tipo_filtro = 'invalido';
+     *
+     *  $resultado = $this->genera_sentencia_base($columnas_extra, $filtro, $tipo_filtro);
+     *  // Retorna un arreglo de error indicando que el tipo de filtro no es válido.
      */
-    final public function genera_sentencia_base(array $columnas_extra,  array $filtro, string $tipo_filtro):array|string{
+    final public function genera_sentencia_base(array $columnas_extra, array $filtro, string $tipo_filtro): array|string
+    {
+        // Validar el tipo de filtro
         $verifica_tf = $this->verifica_tipo_filtro(tipo_filtro: $tipo_filtro);
-        if(errores::$error){
-            return $this->error->error(mensaje: 'Error al validar tipo_filtro',data: $verifica_tf);
+        if (errores::$error) {
+            return $this->error->error(
+                mensaje: 'Error al validar tipo_filtro',
+                data: $verifica_tf
+            );
         }
+
         $sentencia = '';
-        if($tipo_filtro === 'numeros') {
+
+        // Generar sentencia SQL según el tipo de filtro
+        if ($tipo_filtro === 'numeros') {
             $sentencia = $this->genera_and(columnas_extra: $columnas_extra, filtro: $filtro);
-            if(errores::$error){
-                return $this->error->error(mensaje: "Error en and",data:$sentencia);
+            if (errores::$error) {
+                return $this->error->error(
+                    mensaje: "Error en and",
+                    data: $sentencia
+                );
+            }
+        } elseif ($tipo_filtro === 'textos') {
+            $sentencia = $this->genera_and_textos(columnas_extra: $columnas_extra, filtro: $filtro);
+            if (errores::$error) {
+                return $this->error->error(
+                    mensaje: "Error en texto",
+                    data: $sentencia
+                );
             }
         }
-        elseif ($tipo_filtro==='textos'){
-            $sentencia = $this->genera_and_textos(columnas_extra: $columnas_extra,filtro: $filtro);
-            if(errores::$error){
-                return $this->error->error(mensaje: "Error en texto",data:$sentencia);
-            }
-        }
+
         return $sentencia;
     }
+
 
     /**
      * REG
@@ -2061,34 +2425,94 @@ class where
     }
 
     /**
-     * TOTAL
-     * Función privada que procesa los datos de entrada y los limpia para su posterior uso.
+     * REG
+     * Obtiene y valida un valor desde un array o una cadena, aplicando validaciones específicas y escapando caracteres especiales.
      *
-     * @param array|string|null $data Datos de entrada para ser procesados.
+     * - Si `$data` es un array:
+     *   - Si contiene la clave `'value'`, se utiliza su valor.
+     *   - Si no contiene `'value'`, se genera un error.
+     *   - Si está vacío, también se genera un error.
+     * - Si `$data` no es un array, se utiliza directamente su valor.
+     * - Si el valor resultante es `null`, se convierte en una cadena vacía.
+     * - El valor final se retorna con caracteres especiales escapados mediante `addslashes()`.
      *
-     * @return string|array En caso de error, retorna un array con detalles del error. De lo contrario,
-     * retorna los datos de entrada procesados y limpios en forma de string.
+     * @param array|string|null $data Datos desde los cuales se intentará obtener el valor.
      *
-     * @throws errores en caso de que haya algún error durante el proceso.
-     * @version 16.98.0
-     * @url https://github.com/gamboamartin/where/wiki/src.where.value
+     * @return string|array Retorna:
+     *  - Un `string` con el valor obtenido, escapado con `addslashes()`.
+     *  - Un arreglo de error si el valor no cumple las validaciones.
+     *
+     * @example
+     *  Ejemplo 1: `$data` como array con clave 'value'
+     *  --------------------------------------------------------------------------------
+     *  $data = ['value' => "cadena de prueba"];
+     *  $resultado = $this->value($data);
+     *  // Retorna: "cadena de prueba" (con caracteres especiales escapados si aplica).
+     *
+     * @example
+     *  Ejemplo 2: `$data` como array vacío
+     *  --------------------------------------------------------------------------------
+     *  $data = [];
+     *  $resultado = $this->value($data);
+     *  // Retorna un arreglo de error indicando que los datos están vacíos.
+     *
+     * @example
+     *  Ejemplo 3: `$data` como cadena
+     *  --------------------------------------------------------------------------------
+     *  $data = "texto simple";
+     *  $resultado = $this->value($data);
+     *  // Retorna: "texto simple" (con caracteres especiales escapados si aplica).
+     *
+     * @example
+     *  Ejemplo 4: `$data` como null
+     *  --------------------------------------------------------------------------------
+     *  $data = null;
+     *  $resultado = $this->value($data);
+     *  // Retorna: "" (cadena vacía).
+     *
+     * @example
+     *  Ejemplo 5: `$data` como array sin 'value'
+     *  --------------------------------------------------------------------------------
+     *  $data = ['otro_dato' => "valor"];
+     *  $resultado = $this->value($data);
+     *  // Retorna un arreglo de error indicando que no existe la clave 'value'.
      */
-    private function value(array|string|null $data):string|array{
+    private function value(array|string|null $data): string|array
+    {
         $value = $data;
-        if(is_array($data) && isset($data['value'])){
+
+        // Si es un array y contiene la clave 'value', usar ese valor
+        if (is_array($data) && isset($data['value'])) {
             $value = trim($data['value']);
         }
-        if(is_array($data) && count($data) === 0){
-            return $this->error->error(mensaje: "Error datos vacio",data: $data, es_final: true);
+
+        // Validar si el array está vacío
+        if (is_array($data) && count($data) === 0) {
+            return $this->error->error(
+                mensaje: "Error datos vacio",
+                data: $data,
+                es_final: true
+            );
         }
-        if(is_array($data) && !isset($data['value'])){
-            return $this->error->error(mensaje:"Error no existe valor",data: $data,es_final: true);
+
+        // Validar si falta la clave 'value' en el array
+        if (is_array($data) && !isset($data['value'])) {
+            return $this->error->error(
+                mensaje: "Error no existe valor",
+                data: $data,
+                es_final: true
+            );
         }
-        if(is_null($value)){
+
+        // Si el valor es null, convertirlo en una cadena vacía
+        if (is_null($value)) {
             $value = '';
         }
+
+        // Retornar el valor escapado
         return addslashes($value);
     }
+
 
     /**
      * REG
@@ -2251,40 +2675,73 @@ class where
 
 
     /**
-     * TOTAL
-     * Verifica el tipo de filtro proporcionado.
+     * REG
+     * Verifica que el valor de `$tipo_filtro` sea válido dentro de un conjunto predefinido de tipos permitidos.
      *
-     * @param string $tipo_filtro El tipo de filtro a verificar.
-     * @return true|array Devuelve true si el tipo de filtro es correcto,
-     *         si no, devuelve un array con un error.
+     * - Si `$tipo_filtro` está vacío, se establece automáticamente en `'numeros'`.
+     * - Los tipos permitidos son `'numeros'` y `'textos'`.
+     * - Si `$tipo_filtro` no coincide con los tipos permitidos, se retorna un error con los detalles.
+     * - Si `$tipo_filtro` es válido, retorna `true`.
      *
-     * La función realiza las siguientes acciones:
-     * 1. Limpia el tipo de filtro ingresado.
-     * 2. Si el tipo de filtro es una cadena vacía, se establece como 'numeros'.
-     * 3. Define los tipos permitidos de filtro como 'numeros' y 'textos'.
-     * 4. Verifica si el tipo de filtro ingresado pertenece a los tipos permitidos.
-     *    Si no es así, crea un nuevo objeto stdClass y establece la propiedad
-     *    tipo_filtro con el valor ingresado y retorna un error con el mensaje y los datos correspondientes.
-     * @version 13.8.0
-     * @url https://github.com/gamboamartin/where/wiki/src.where.verifica_tipo_filtro
+     * @param string $tipo_filtro Cadena que representa el tipo de filtro a verificar.
+     *
+     * @return true|array Retorna:
+     *  - `true` si `$tipo_filtro` es válido.
+     *  - Un arreglo con detalles del error si `$tipo_filtro` no es válido.
+     *
+     * @example
+     *  Ejemplo 1: `$tipo_filtro` vacío
+     *  ---------------------------------------------------------------------
+     *  $tipo_filtro = "";
+     *  $resultado = $this->verifica_tipo_filtro($tipo_filtro);
+     *  // Dado que `$tipo_filtro` está vacío, se establece en `'numeros'`.
+     *  // $resultado será `true`.
+     *
+     * @example
+     *  Ejemplo 2: `$tipo_filtro` válido
+     *  ---------------------------------------------------------------------
+     *  $tipo_filtro = "textos";
+     *  $resultado = $this->verifica_tipo_filtro($tipo_filtro);
+     *  // $resultado será `true`, ya que "textos" es un tipo permitido.
+     *
+     * @example
+     *  Ejemplo 3: `$tipo_filtro` inválido
+     *  ---------------------------------------------------------------------
+     *  $tipo_filtro = "fecha";
+     *  $resultado = $this->verifica_tipo_filtro($tipo_filtro);
+     *  // Retorna un arreglo con el error:
+     *  // [
+     *  //   'error'   => 1,
+     *  //   'mensaje' => 'Error el tipo filtro no es correcto los filtros pueden ser o numeros o textos',
+     *  //   'data'    => { tipo_filtro: "fecha" }
+     *  // ]
      */
     final public function verifica_tipo_filtro(string $tipo_filtro): true|array
     {
         $tipo_filtro = trim($tipo_filtro);
-        if($tipo_filtro === ''){
+
+        // Si el tipo de filtro está vacío, se establece en 'numeros' por defecto
+        if ($tipo_filtro === '') {
             $tipo_filtro = 'numeros';
         }
-        $tipos_permitidos = array('numeros','textos');
-        if(!in_array($tipo_filtro,$tipos_permitidos)){
 
+        // Tipos de filtros permitidos
+        $tipos_permitidos = array('numeros', 'textos');
+
+        // Verifica si el tipo de filtro no es válido
+        if (!in_array($tipo_filtro, $tipos_permitidos)) {
             $params = new stdClass();
             $params->tipo_filtro = $tipo_filtro;
 
             return $this->error->error(
                 mensaje: 'Error el tipo filtro no es correcto los filtros pueden ser o numeros o textos',
-                data: $params, es_final: true);
+                data: $params,
+                es_final: true
+            );
         }
+
         return true;
     }
+
 
 }
