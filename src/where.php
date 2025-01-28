@@ -245,19 +245,47 @@ class where
     }
 
     /**
-     * TOTAL
-     * Esta función valida el campo proporcionado para ser filtrado y verifica si el campo es parte de una subconsulta.
-     * Si el campo proporcionado está vacío, se retorna un error.
-     * Una verificación adicional se realiza para garantizar si el campo proporcionado pertenece a una subconsulta.
+     * REG
+     * Procesa un campo para un filtro especial, permitiendo identificar si el campo
+     * corresponde a una subconsulta definida en las columnas adicionales.
+     * Si es una subconsulta, sustituye el valor del campo con su definición.
      *
-     * @param string $campo Representa el campo en el que se aplicará el filtro especial.
-     * @param array $columnas_extra Un array de columnas adicionales que pueden estar presentes en la tabla objetivo.
+     * @param string $campo El nombre del campo a procesar. No debe estar vacío.
+     * @param array $columnas_extra Array asociativo donde las claves representan campos
+     *                               y los valores contienen subconsultas o definiciones adicionales.
      *
-     * @return string|array Retorna el campo de filtro si la validación es exitosa o un objeto de error si hay algún problema.
+     * @return array|string El campo procesado como cadena si no es una subconsulta,
+     *                      o la definición de subconsulta si existe en $columnas_extra.
+     *                      Devuelve un array de error en caso de fallos en la validación.
      *
-     * @throws errores Puede lanzar una excepción si el campo proporcionado es una subconsulta incorrecta.
-     * @version 16.145.0
-     * @url https://github.com/gamboamartin/where/wiki/src.where.campo_filtro_especial
+     * @throws errores Si ocurre algún error al validar o procesar los datos.
+     *
+     * @example Uso exitoso:
+     * ```php
+     * $columnas_extra = [
+     *     'total' => '(SELECT SUM(cantidad) FROM ventas WHERE ventas.producto_id = productos.id)',
+     *     'descuento' => '(SELECT descuento FROM promociones WHERE promociones.id = productos.promocion_id)'
+     * ];
+     *
+     * $campo = 'total';
+     * $resultado = $objeto->campo_filtro_especial(campo: $campo, columnas_extra: $columnas_extra);
+     *
+     * // Resultado esperado:
+     * // $resultado = '(SELECT SUM(cantidad) FROM ventas WHERE ventas.producto_id = productos.id)';
+     * ```
+     *
+     * @example Campo sin subconsulta:
+     * ```php
+     * $columnas_extra = [
+     *     'descuento' => '(SELECT descuento FROM promociones WHERE promociones.id = productos.promocion_id)'
+     * ];
+     *
+     * $campo = 'nombre';
+     * $resultado = $objeto->campo_filtro_especial(campo: $campo, columnas_extra: $columnas_extra);
+     *
+     * // Resultado esperado:
+     * // $resultado = 'nombre';
+     * ```
      */
     final public function campo_filtro_especial(string $campo, array $columnas_extra): array|string
     {
@@ -659,18 +687,67 @@ class where
 
 
     /**
-     * TOTAL
-     * Genera una consulta SQL a partir de los parámetros proporcionados.
+     * REG
+     * Genera una cláusula SQL basada en un campo, un filtro y su configuración.
+     * Realiza validaciones y construye la cláusula en función de si el valor en el filtro es un campo o un dato estático.
      *
-     * @param string $campo Campo de la consulta SQL.
-     * @param string $campo_filtro Campo para el filtrado de la consulta.
-     * @param array $filtro Filtro a aplicar en la consulta.
+     * @param string $campo El nombre del campo en la base de datos que será parte de la cláusula SQL.
+     * @param string $campo_filtro El identificador dentro del array `$filtro` que contiene las claves necesarias para el filtro.
+     * @param array $filtro Un array asociativo que define el filtro con las claves requeridas:
+     *                      - `$filtro[$campo_filtro]['operador']`: Operador SQL (por ejemplo, `=`, `>`, `<`).
+     *                      - `$filtro[$campo_filtro]['valor']`: Valor del filtro (por ejemplo, un número o cadena).
+     *                      - `$filtro[$campo_filtro]['valor_es_campo']`: Opcional. Indica si el valor es un campo de base de datos (booleano).
      *
-     * @return string|array Retorna el resultado de la consulta SQL o un error si algo va mal.
+     * @return array|string Retorna una cadena con la cláusula SQL generada si los datos son válidos.
+     *                      En caso de error, retorna un array con los detalles del error generado por la clase `errores`.
      *
-     * @throws errores Error al validar datos o generar la consulta SQL.
-     * @version 16.163.0
-     * @url https://github.com/gamboamartin/where/wiki/src.where.data_sql
+     * @throws errores Si ocurre un error en las validaciones de los datos o en la generación de la cláusula SQL.
+     *
+     * @example Uso exitoso con valor estático:
+     * ```php
+     * $campo = 'precio';
+     * $campo_filtro = 'filtro_precio';
+     * $filtro = [
+     *     'filtro_precio' => [
+     *         'operador' => '>',
+     *         'valor' => 100
+     *     ]
+     * ];
+     *
+     * $resultado = $this->data_sql(campo: $campo, campo_filtro: $campo_filtro, filtro: $filtro);
+     * // Resultado esperado: " precio > '100' "
+     * ```
+     *
+     * @example Uso exitoso con valor como campo:
+     * ```php
+     * $campo = 'precio';
+     * $campo_filtro = 'filtro_precio';
+     * $filtro = [
+     *     'filtro_precio' => [
+     *         'operador' => '=',
+     *         'valor' => 'otro_campo',
+     *         'valor_es_campo' => true
+     *     ]
+     * ];
+     *
+     * $resultado = $this->data_sql(campo: $campo, campo_filtro: $campo_filtro, filtro: $filtro);
+     * // Resultado esperado: "'precio'=otro_campo"
+     * ```
+     *
+     * @example Error por datos incompletos:
+     * ```php
+     * $campo = 'precio';
+     * $campo_filtro = 'filtro_precio';
+     * $filtro = [
+     *     'filtro_precio' => [
+     *         'operador' => '',
+     *         'valor' => 100
+     *     ]
+     * ];
+     *
+     * $resultado = $this->data_sql(campo: $campo, campo_filtro: $campo_filtro, filtro: $filtro);
+     * // Resultado esperado: Array indicando que el operador está vacío.
+     * ```
      */
     final public function data_sql(string $campo, string $campo_filtro, array $filtro): array|string
     {
@@ -695,18 +772,49 @@ class where
     }
 
     /**
-     * TOTAL
-     * Método para generar una cadena SQL para un filtro base.
+     * REG
+     * Genera una cláusula SQL basada en un campo, un filtro y su operador.
+     * Valida que los datos de entrada sean correctos y estén completos antes de construir la cláusula.
      *
-     * @param string $campo Nombre del campo en la base de datos.
-     * @param string $campo_filtro Nombre del campo del filtro.
-     * @param array $filtro El filtro a aplicar en la sentencia SQL.
-     * @return string|array Retorna una cadena con la sentencia SQL en caso de que se haya generado correctamente,
-     *                      en caso contrario retorna un array con los detalles del error.
+     * @param string $campo El nombre del campo que será parte de la cláusula SQL. No debe estar vacío.
+     * @param string $campo_filtro El identificador dentro del array `$filtro` que contiene los valores del operador y del valor.
+     * @param array $filtro El array que define el filtro. Debe incluir las claves requeridas:
+     *                      `$filtro[$campo_filtro]['operador']` y `$filtro[$campo_filtro]['valor']`.
      *
-     * @throws errores Lanza una excepción en caso de errores.
-     * @version 16.152.0
-     * @url https://github.com/gamboamartin/where/wiki/src.where.campo.data_sql_base
+     * @return string|array Retorna una cadena con la cláusula SQL generada si los datos son válidos.
+     *                      En caso de error, devuelve un array con los detalles del error.
+     *
+     * @throws array Si los datos de entrada no cumplen con las validaciones, retorna un array con detalles del error.
+     *
+     * @example Uso exitoso:
+     * ```php
+     * $campo = 'precio';
+     * $campo_filtro = 'filtro_precio';
+     * $filtro = [
+     *     'filtro_precio' => [
+     *         'operador' => '>',
+     *         'valor' => 100
+     *     ]
+     * ];
+     *
+     * $resultado = $this->data_sql_base(campo: $campo, campo_filtro: $campo_filtro, filtro: $filtro);
+     * // Resultado esperado: " precio > '100' "
+     * ```
+     *
+     * @example Error por datos incompletos:
+     * ```php
+     * $campo = 'precio';
+     * $campo_filtro = 'filtro_precio';
+     * $filtro = [
+     *     'filtro_precio' => [
+     *         'operador' => '',
+     *         'valor' => 100
+     *     ]
+     * ];
+     *
+     * $resultado = $this->data_sql_base(campo: $campo, campo_filtro: $campo_filtro, filtro: $filtro);
+     * // Resultado esperado: Array indicando que el operador está vacío.
+     * ```
      */
     private function data_sql_base(string $campo, string $campo_filtro, array $filtro): string|array
     {
@@ -719,16 +827,49 @@ class where
     }
 
     /**
-     * TOTAL
-     * Valida el campo del filtro y retorna un string para la consulta SQL o un mensaje de error.
+     * REG
+     * Genera una cláusula SQL para un campo específico basándose en un filtro y su operador.
+     * Valida los datos de entrada para garantizar la construcción correcta de la cláusula.
      *
-     * @param string $campo El campo a validar.
-     * @param string $campo_filtro El campo del filtro a utilizar.
-     * @param array $filtro El array del filtro a aplicar.
+     * @param string $campo El nombre del campo que será parte de la cláusula SQL. Debe ser no vacío.
+     * @param string $campo_filtro El identificador dentro del array `$filtro` que contiene las claves necesarias para la cláusula SQL.
+     * @param array $filtro El array asociativo que define el filtro. Debe contener las claves:
+     *                      `$filtro[$campo_filtro]['operador']` y `$filtro[$campo_filtro]['valor']`.
      *
-     * @return string|array Retorna un string formateado para la consulta SQL o un mensaje de error.
-     * @version 16.161.0
-     * @url https://github.com/gamboamartin/where/wiki/src.where.data_sql_campo
+     * @return string|array Retorna una cadena con la cláusula SQL generada si los datos son válidos.
+     *                      En caso de error, retorna un array con los detalles del error.
+     *
+     * @throws errores Si los datos de entrada no cumplen con las validaciones, retorna un array con detalles del error.
+     *
+     * @example Uso exitoso:
+     * ```php
+     * $campo = 'precio';
+     * $campo_filtro = 'filtro_precio';
+     * $filtro = [
+     *     'filtro_precio' => [
+     *         'operador' => '=',
+     *         'valor' => 100
+     *     ]
+     * ];
+     *
+     * $resultado = $this->data_sql_campo(campo: $campo, campo_filtro: $campo_filtro, filtro: $filtro);
+     * // Resultado esperado: "'precio'=100"
+     * ```
+     *
+     * @example Error por datos incompletos:
+     * ```php
+     * $campo = 'precio';
+     * $campo_filtro = 'filtro_precio';
+     * $filtro = [
+     *     'filtro_precio' => [
+     *         'operador' => '',
+     *         'valor' => 100
+     *     ]
+     * ];
+     *
+     * $resultado = $this->data_sql_campo(campo: $campo, campo_filtro: $campo_filtro, filtro: $filtro);
+     * // Resultado esperado: Array indicando que el operador está vacío.
+     * ```
      */
     private function data_sql_campo(string $campo, string $campo_filtro, array $filtro): string|array
     {
@@ -827,15 +968,67 @@ class where
     }
 
     /**
-     * TOTAL
-     * Determina si un campo es un subquery basado en la existencia del campo en las columnas extra.
+     * REG
+     * Determina si un campo específico está presente en las columnas adicionales (subqueries) proporcionadas.
      *
-     * @param string $campo El campo a evaluar si es un subquery.
-     * @param array $columnas_extra Las columnas extra donde se va a buscar el campo.
-     * @return bool|array Retorna verdadero si el campo es un subquery, en caso contrario retorna falso.
-     *  En el caso de que el campo esté vacío, se retorna un error.
-     * @url https://github.com/gamboamartin/where/wiki/src.where.es_subquery
+     * @param string $campo Nombre del campo a evaluar. No puede ser una cadena vacía.
+     * @param array $columnas_extra Array asociativo que contiene las columnas adicionales, donde las claves representan los campos.
+     *
+     * @return bool|array Devuelve `true` si el campo existe en `$columnas_extra`, `false` en caso contrario.
+     * Si el parámetro `$campo` está vacío, devuelve un array con los detalles del error.
+     *
+     * @throws errores Si:
+     * - `$campo` está vacío.
+     *
+     * ### Ejemplos de uso:
+     *
+     * 1. **Caso exitoso: El campo es un subquery**:
+     *    ```php
+     *    $campo = 'total';
+     *    $columnas_extra = [
+     *        'total' => 'SUM(valor)',
+     *        'promedio' => 'AVG(valor)',
+     *    ];
+     *    $resultado = $modelo->es_subquery(campo: $campo, columnas_extra: $columnas_extra);
+     *    // Resultado esperado: true
+     *    ```
+     *
+     * 2. **Caso exitoso: El campo no es un subquery**:
+     *    ```php
+     *    $campo = 'cantidad';
+     *    $columnas_extra = [
+     *        'total' => 'SUM(valor)',
+     *        'promedio' => 'AVG(valor)',
+     *    ];
+     *    $resultado = $modelo->es_subquery(campo: $campo, columnas_extra: $columnas_extra);
+     *    // Resultado esperado: false
+     *    ```
+     *
+     * 3. **Error: Campo vacío**:
+     *    ```php
+     *    $campo = '';
+     *    $columnas_extra = [
+     *        'total' => 'SUM(valor)',
+     *        'promedio' => 'AVG(valor)',
+     *    ];
+     *    $resultado = $modelo->es_subquery(campo: $campo, columnas_extra: $columnas_extra);
+     *    // Resultado esperado: Array con el mensaje "Error campo esta vacio".
+     *    ```
+     *
+     * ### Proceso de la función:
+     * 1. Valida que `$campo` no sea una cadena vacía.
+     * 2. Inicializa `$es_subquery` como `false`.
+     * 3. Verifica si `$campo` existe como clave en `$columnas_extra`.
+     *    - Si existe, establece `$es_subquery` como `true`.
+     * 4. Devuelve el valor de `$es_subquery`.
+     *
+     * ### Resultado esperado:
+     * - **Éxito**:
+     *   - Devuelve `true` si el campo está en `$columnas_extra`.
+     *   - Devuelve `false` si el campo no está en `$columnas_extra`.
+     * - **Error**: Devuelve un array con detalles del error si `$campo` está vacío.
      */
+
     private function es_subquery(string $campo, array $columnas_extra): bool|array
     {
         $campo = trim($campo);
@@ -2302,32 +2495,50 @@ class where
 
 
     /**
-     * TOTAL
-     * Comprueba y valida los valores de un campo y un campo de filtro.
+     * REG
+     * Valida la estructura y contenido de un filtro aplicado a un campo en SQL.
+     * Verifica que los datos en el filtro estén completos, correctos y definidos
+     * según las claves requeridas (`operador` y `valor`).
      *
-     * @param string $campo Representa el nombre del campo a validar.
-     * @param string $campo_filtro Es el nombre del campo de filtro.
-     * @param array $filtro Es un array que contiene los filtros a aplicar.
+     * @param string $campo El nombre del campo al que se aplicará el filtro. No debe estar vacío.
+     * @param string $campo_filtro El identificador del filtro dentro del array `$filtro`. No debe estar vacío.
+     * @param array $filtro El array que contiene la configuración del filtro. Debe incluir las claves
+     *                      `$filtro[$campo_filtro]['operador']` y `$filtro[$campo_filtro]['valor']`.
      *
-     * @return true|array Si la validación es successful, retorna true.
-     *                    En caso contrario, se retorna un array con detalles del error producido.
+     * @return true|array Devuelve `true` si la validación es exitosa. Si ocurre un error,
+     *                    devuelve un array con los detalles del error.
      *
-     * @throws errores si algún parámetro no es del tipo esperado.
+     * @throws errores Si alguna validación falla, genera un array con detalles del error.
      *
-     * Ejemplo de uso:
+     * @example Uso exitoso:
+     * ```php
+     * $campo = 'precio';
+     * $campo_filtro = 'filtro_precio';
+     * $filtro = [
+     *     'filtro_precio' => [
+     *         'operador' => '>',
+     *         'valor' => 100
+     *     ]
+     * ];
      *
-     *      valida_campo_filtro("nombre", "nombre_filtro", array("nombre_filtro" => array("operador" => "igual", "valor" => "Juan")))
+     * $resultado = $objeto->valida_campo_filtro(campo: $campo, campo_filtro: $campo_filtro, filtro: $filtro);
+     * // Resultado esperado: true
+     * ```
      *
-     * Los posibles errores que retorna son:
-     * - Error campo_filtro esta vacio.
-     * - Error campo esta vacio.
-     * - Error no existe $filtro[campo_filtro].
-     * - Error no es un array $filtro[campo_filtro].
-     * - Error no existe $filtro[campo_filtro][operador].
-     * - Error no existe $filtro[campo_filtro][valor].
-     * - Error esta vacio $filtro[campo_filtro][operador].
-     * @version 16.160.0
-     * @url https://github.com/gamboamartin/where/wiki/src.where.campo.valida_campo_filtro
+     * @example Filtro inválido:
+     * ```php
+     * $campo = 'precio';
+     * $campo_filtro = 'filtro_precio';
+     * $filtro = [
+     *     'filtro_precio' => [
+     *         'operador' => '',
+     *         'valor' => 100
+     *     ]
+     * ];
+     *
+     * $resultado = $objeto->valida_campo_filtro(campo: $campo, campo_filtro: $campo_filtro, filtro: $filtro);
+     * // Resultado esperado: Array con error indicando que el operador está vacío.
+     * ```
      */
     private function valida_campo_filtro(string $campo, string $campo_filtro, array $filtro): true|array
     {
