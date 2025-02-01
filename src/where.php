@@ -216,33 +216,79 @@ class where
 
 
     /**
-     * TOTAL
-     * La función campo_data_filtro se usa para aplicar ciertas validaciones en la clave del array $data_filtro.
+     * REG
+     * Valida y extrae la clave (campo) de un array de datos de filtro.
      *
-     * @param  array $data_filtro El array de entrada que se tiene que validar.
-     * @throws errores Si la clave del array está vacía o si la clave no es un string válido (no numérico).
-     * @return string|array Devuelve la clave del array $data_filtro después de apliar trim() si la validación es exitosa.
-     *                     En caso de error, se devuelve un array con los detalles del error.
+     * Este método procesa un array asociativo que representa los datos de un filtro y realiza las siguientes validaciones:
      *
-     * @url https://github.com/gamboamartin/where/wiki/src.where.campo_data_filtro
+     * 1. Verifica que el array `$data_filtro` no esté vacío. Si el array está vacío, retorna un error indicando "Error data_filtro esta vacio".
+     * 2. Obtiene la primera clave del array utilizando `key($data_filtro)` y la recorta con `trim()`.
+     * 3. Si la clave resultante es una cadena vacía, retorna un error indicando "Error key vacio".
+     * 4. Si la clave es numérica, retorna un error indicando "Error key debe ser un texto valido", ya que se espera un nombre de campo en formato de texto.
      *
+     * Si todas las validaciones se cumplen, el método retorna la clave (campo) procesada y recortada.
+     *
+     * @param array $data_filtro Array asociativo que contiene los datos del filtro. Se espera que tenga al menos una clave que represente el campo a filtrar.
+     *
+     * @return string|array Devuelve la clave (campo) procesada (string) si la validación es exitosa;
+     *                      en caso contrario, retorna un array con los detalles del error utilizando `$this->error->error()`.
+     *
+     * @example Ejemplo 1: Uso exitoso
+     * ```php
+     * $data_filtro = ['nombre' => 'Juan'];
+     * $resultado = $obj->campo_data_filtro($data_filtro);
+     * // Resultado esperado: "nombre"
+     * ```
+     *
+     * @example Ejemplo 2: Error por array vacío
+     * ```php
+     * $data_filtro = [];
+     * $resultado = $obj->campo_data_filtro($data_filtro);
+     * // Resultado esperado: Array de error indicando "Error data_filtro esta vacio"
+     * ```
+     *
+     * @example Ejemplo 3: Error por clave vacía
+     * ```php
+     * $data_filtro = ['' => 'valor'];
+     * $resultado = $obj->campo_data_filtro($data_filtro);
+     * // Resultado esperado: Array de error indicando "Error key vacio"
+     * ```
+     *
+     * @example Ejemplo 4: Error por clave numérica
+     * ```php
+     * $data_filtro = [0 => 'valor'];
+     * $resultado = $obj->campo_data_filtro($data_filtro);
+     * // Resultado esperado: Array de error indicando "Error key debe ser un texto valido"
+     * ```
      */
     private function campo_data_filtro(array $data_filtro): string|array
     {
-        if(count($data_filtro) === 0){
-            return $this->error->error(mensaje:'Error data_filtro esta vacio',  data:$data_filtro, es_final: true);
+        if (count($data_filtro) === 0) {
+            return $this->error->error(
+                mensaje: 'Error data_filtro esta vacio',
+                data: $data_filtro,
+                es_final: true
+            );
         }
         $campo = key($data_filtro);
         $campo = trim($campo);
-        if($campo === ''){
-            return $this->error->error(mensaje: "Error key vacio",data:  $campo, es_final: true);
+        if ($campo === '') {
+            return $this->error->error(
+                mensaje: "Error key vacio",
+                data: $campo,
+                es_final: true
+            );
         }
-        if(is_numeric($campo )){
-            return $this->error->error(mensaje: "Error key debe ser un texto valido",data:  $campo, es_final: true);
+        if (is_numeric($campo)) {
+            return $this->error->error(
+                mensaje: "Error key debe ser un texto valido",
+                data: $campo,
+                es_final: true
+            );
         }
         return trim($campo);
-
     }
+
 
     /**
      * REG
@@ -884,77 +930,157 @@ class where
     }
 
     /**
-     * TOTAL
-     * Esta función gestiona un array asociativo que implementa filtros especiales para la consulta SQL
-     * que está siendo generada.
+     * REG
+     * Procesa los datos de un filtro especial para generar una condición SQL.
      *
-     * @param array $data_filtro El array contiene múltiples campos para filtrar.
+     * Este método valida la información contenida en el array de filtro especial y construye una condición SQL
+     * concatenando el campo, el operador y el valor (escapado con `addslashes()`) entre comillas simples. Además,
+     * se requiere que el array de filtro contenga las claves `'operador'`, `'valor'` y `'comparacion'` para el campo a filtrar.
      *
-     * @return stdClass|array Retorna un objeto con 5 propiedades: campo, operador, valor, comparacion,
-     *                         y condicion si la operación fue exitosa. En caso de error, devuelve un objeto Error.
+     * Procedimiento:
      *
-     * @throws errores si el array $data_filtro está vacío.
-     * @throws errores si el campo `operador` no existe en cada campo del array $data_filtro.
-     * @throws errores si el campo `valor` no existe en cada campo del array $data_filtro.
-     * @throws errores si el campo `comparacion` no existe en cada campo del array $data_filtro.
+     * 1. Verifica que el array `$data_filtro` no esté vacío; en caso de estarlo, retorna un error.
+     * 2. Obtiene el nombre del campo (clave) usando el método `campo_data_filtro()`, que valida que la clave exista,
+     *    no sea vacía y sea un string válido.
+     * 3. Comprueba que en `$data_filtro[$campo]` exista la clave `'operador'`. Si falta, retorna un error.
+     * 4. Extrae el operador y valida que no esté vacío.
+     * 5. Verifica que en `$data_filtro[$campo]` exista la clave `'valor'`; si no existe, se asigna una cadena vacía.
+     * 6. Verifica que en `$data_filtro[$campo]` exista la clave `'comparacion'`; de lo contrario, retorna un error.
+     * 7. Comprueba que el valor asociado a `$data_filtro[$campo]['valor']` no sea una cadena vacía; si lo es, retorna un error.
+     * 8. Escapa el valor usando `addslashes()`.
+     * 9. Construye la condición SQL concatenando el campo, el operador y el valor escapado.
+     * 10. Crea y retorna un objeto `stdClass` con las propiedades:
+     *     - `campo`: El campo procesado.
+     *     - `operador`: El operador extraído del filtro.
+     *     - `valor`: El valor escapado.
+     *     - `comparacion`: La clave de comparación del filtro (usualmente un operador lógico, como "AND" u "OR").
+     *     - `condicion`: La condición SQL completa, por ejemplo, `"precio > '100'"`.
      *
-     * @example
-     * $where = new Where();
-     * $filtrado = $where->datos_filtro_especial([
-     *     'age' => [
-     *         'operador' => '>',
-     *         'valor' => '21',
-     *         'comparacion' => 'AND',
-     *     ],
-     * ]);
-     * // Resultado:
-     * // stdClass Object
-     * // (
-     * //    [campo] => age
-     * //    [operador] => >
-     * //    [valor] => 21
-     * //    [comparacion] => AND
-     * //    [condicion] => age>'21'
-     * // )
-     * @version 16.248.1
-     * @url https://github.com/gamboamartin/where/wiki/src.where.datos_filtro_especial
+     * @param array $data_filtro Array asociativo que debe contener la configuración del filtro especial para un campo.
+     *                           Su estructura debe ser similar a:
+     *                           ```php
+     *                           [
+     *                               'nombre_del_campo' => [
+     *                                   'operador'      => (string), // Ej.: '>', '=', '<'
+     *                                   'valor'         => (mixed),  // Ej.: 100 o 'activo'
+     *                                   'comparacion'   => (string)  // Ej.: 'AND', 'OR'
+     *                                   // Opcional: 'valor_es_campo' => (bool)
+     *                               ]
+     *                           ]
+     *                           ```
+     *
+     * @return array|stdClass Devuelve un objeto `stdClass` con las propiedades `campo`, `operador`, `valor`,
+     *                         `comparacion` y `condicion` si la validación es exitosa; en caso contrario, retorna
+     *                         un array con los detalles del error.
+     *
+     * @example Ejemplo 1: Uso exitoso
+     * ```php
+     * $data_filtro = [
+     *     'precio' => [
+     *         'operador'    => '>',
+     *         'valor'       => 100,
+     *         'comparacion' => 'AND'
+     *     ]
+     * ];
+     *
+     * $resultado = $obj->datos_filtro_especial($data_filtro);
+     * // Resultado esperado (si no hay errores):
+     * // stdClass {
+     * //     campo       => "precio",
+     * //     operador    => ">",
+     * //     valor       => "100",         // Valor escapado con addslashes()
+     * //     comparacion => "AND",
+     * //     condicion   => "precio>'100'"
+     * // }
+     * ```
+     *
+     * @example Ejemplo 2: Error por falta de clave 'operador'
+     * ```php
+     * $data_filtro = [
+     *     'precio' => [
+     *         // Falta la clave 'operador'
+     *         'valor'       => 100,
+     *         'comparacion' => 'AND'
+     *     ]
+     * ];
+     *
+     * $resultado = $obj->datos_filtro_especial($data_filtro);
+     * // Resultado esperado: Array de error indicando "Error data_filtro[precio][operador] debe existir"
+     * ```
+     *
+     * @example Ejemplo 3: Error si el valor es un array
+     * ```php
+     * $data_filtro = [
+     *     'precio' => [
+     *         'operador'    => '=',
+     *         'valor'       => [100, 200], // Valor inválido: se espera un dato escalar
+     *         'comparacion' => 'AND'
+     *     ]
+     * ];
+     *
+     * $resultado = $obj->datos_filtro_especial($data_filtro);
+     * // Resultado esperado: Array de error indicando "Error $filtro['precio']['valor'] debe ser un dato"
+     * ```
      */
-    private function datos_filtro_especial(array $data_filtro):array|stdClass
-    {
-        if(count($data_filtro) === 0){
-            return $this->error->error(mensaje:'Error data_filtro esta vacio',  data:$data_filtro, es_final: true);
+    private function datos_filtro_especial(array $data_filtro): array|stdClass {
+        if (count($data_filtro) === 0) {
+            return $this->error->error(
+                mensaje: 'Error data_filtro esta vacio',
+                data: $data_filtro,
+                es_final: true
+            );
         }
         $campo = $this->campo_data_filtro(data_filtro: $data_filtro);
-        if(errores::$error){
-            return $this->error->error(mensaje:'Error al obtener campo',data:  $campo);
+        if (errores::$error) {
+            return $this->error->error(
+                mensaje: 'Error al obtener campo',
+                data: $campo
+            );
         }
 
-        if(!isset($data_filtro[$campo]['operador'])){
-            return $this->error->error(mensaje:'Error data_filtro['.$campo.'][operador] debe existir',
-                data:$data_filtro, es_final: true);
+        if (!isset($data_filtro[$campo]['operador'])) {
+            return $this->error->error(
+                mensaje: 'Error data_filtro[' . $campo . '][operador] debe existir',
+                data: $data_filtro,
+                es_final: true
+            );
         }
 
         $operador = $data_filtro[$campo]['operador'];
-        if($operador===''){
-            return $this->error->error(mensaje:'Error el operador debe de existir',data:$operador, es_final: true);
+        if ($operador === '') {
+            return $this->error->error(
+                mensaje: 'Error el operador debe de existir',
+                data: $operador,
+                es_final: true
+            );
         }
 
-        if(!isset($data_filtro[$campo]['valor'])){
-            return $this->error->error(mensaje:'Error data_filtro['.$campo.'][valor] debe existir',
-                data:$data_filtro, es_final: true);
+        if (!isset($data_filtro[$campo]['valor'])) {
+            return $this->error->error(
+                mensaje: 'Error data_filtro[' . $campo . '][valor] debe existir',
+                data: $data_filtro,
+                es_final: true
+            );
         }
-        if(!isset($data_filtro[$campo]['comparacion'])){
-            return $this->error->error(mensaje:'Error data_filtro['.$campo.'][comparacion] debe existir',
-                data:$data_filtro, es_final: true);
+        if (!isset($data_filtro[$campo]['comparacion'])) {
+            return $this->error->error(
+                mensaje: 'Error data_filtro[' . $campo . '][comparacion] debe existir',
+                data: $data_filtro,
+                es_final: true
+            );
         }
 
         $valor = $data_filtro[$campo]['valor'];
-        if($valor===''){
-            return $this->error->error(mensaje:'Error el operador debe de existir',data:$valor, es_final: true);
+        if ($valor === '') {
+            return $this->error->error(
+                mensaje: 'Error el operador debe de existir',
+                data: $valor,
+                es_final: true
+            );
         }
         $valor = addslashes($valor);
         $comparacion = $data_filtro[$campo]['comparacion'];
-        $condicion = $campo.$operador."'$valor'";
+        $condicion = $campo . $operador . "'$valor'";
 
         $datos = new stdClass();
         $datos->campo = $campo;
@@ -964,8 +1090,8 @@ class where
         $datos->condicion = $condicion;
 
         return $datos;
-
     }
+
 
     /**
      * REG
@@ -1044,130 +1170,270 @@ class where
     }
 
     /**
+     * REG
+     * Genera la cláusula SQL especial combinando múltiples filtros especiales.
      *
-     * TOTAL
-     * Genera las condiciones sql de un filtro especial
-     * @param array $columnas_extra Conjunto de columnas en forma de subquery
-     * @param array $filtro_especial //arreglo con las condiciones $filtro_especial[0][tabla.campo]= array('operador'=>'<','valor'=>'x')
+     * Este método recorre cada entrada del arreglo `$filtro_especial`, que debe ser un arreglo asociativo donde:
+     * - Las claves representan los nombres de los campos (por ejemplo, "tabla.campo").
+     * - Los valores son arreglos que contienen la configuración de cada filtro especial para ese campo.
      *
-     * @return array|string
-     * @example
-     *      Ej 1
-     *      $filtro_especial[0][tabla.campo]['operador'] = '>';
-     *      $filtro_especial[0][tabla.campo]['valor'] = 'x';
+     * Para cada entrada, se realiza lo siguiente:
      *
-     *      $resultado = filtro_especial_sql($filtro_especial);
-     *      $resultado =  tabla.campo > 'x'
+     * 1. Se verifica que el valor asociado a cada campo sea un arreglo. Si no lo es, se retorna un error indicando
+     *    que cada filtro especial debe definirse como un arreglo.
      *
-     *      Ej 2
-     *      $filtro_especial[0][tabla.campo]['operador'] = '<';
-     *      $filtro_especial[0][tabla.campo]['valor'] = 'x';
+     * 2. Se llama al método `obten_filtro_especial()`, el cual se encarga de procesar el filtro especial para el campo
+     *    en cuestión y de integrar la condición SQL resultante a la cláusula SQL especial acumulada (`$filtro_especial_sql`).
      *
-     *      $resultado = filtro_especial_sql($filtro_especial);
-     *      $resultado =  tabla.campo < 'x'
+     * 3. Si ocurre algún error durante el procesamiento de alguno de los filtros (por ejemplo, validaciones fallidas o
+     *    problemas al concatenar la condición), se retorna un error con los detalles correspondientes.
      *
-     *      Ej 3
-     *      $filtro_especial[0][tabla.campo]['operador'] = '<';
-     *      $filtro_especial[0][tabla.campo]['valor'] = 'x';
+     * Al finalizar el ciclo, se retorna la cadena SQL resultante que contiene la combinación de todas las condiciones
+     * especiales de filtro.
      *
-     *      $filtro_especial[1][tabla.campo2]['operador'] = '>=';
-     *      $filtro_especial[1][tabla.campo2]['valor'] = 'x';
-     *      $filtro_especial[1][tabla.campo2]['comparacion'] = 'OR ';
+     * @param array $columnas_extra Array asociativo con definiciones adicionales para los campos, que pueden utilizarse
+     *                              para sobrescribir o complementar el nombre del campo en el filtro especial.
+     *                              Ejemplo:
+     *                              ```php
+     *                              [
+     *                                  'tabla.precio' => 'productos.precio'
+     *                              ]
+     *                              ```
+     * @param array $filtro_especial  Arreglo asociativo que define los filtros especiales. Cada entrada debe tener la siguiente estructura:
+     *                              ```php
+     *                              [
+     *                                  'tabla.campo' => [
+     *                                      'operador'     => '>',    // Operador de comparación (por ejemplo, ">", "<", "=")
+     *                                      'valor'        => 100,    // Valor para la comparación
+     *                                      'comparacion'  => 'AND'   // (Opcional) Operador lógico para concatenar condiciones
+     *                                  ]
+     *                              ]
+     *                              ```
      *
-     *      $resultado = filtro_especial_sql($filtro_especial);
-     *      $resultado =  tabla.campo < 'x' OR tabla.campo2  >= x
+     * @return array|string Retorna la cadena SQL que resulta de concatenar todas las condiciones especiales de filtro.
+     *                      En caso de error, retorna un arreglo con la información del error.
      *
-     * @version 16.204.0
-     * @url https://github.com/gamboamartin/where/wiki/src.where.filtro_especial_sql
+     * @example Ejemplo 1: Uso exitoso con un único filtro especial
+     * ```php
+     * $columnas_extra = ['tabla.precio' => 'productos.precio'];
+     * $filtro_especial = [
+     *     'tabla.precio' => [
+     *         'operador' => '>',
+     *         'valor' => 100,
+     *         'comparacion' => 'AND'
+     *     ]
+     * ];
+     *
+     * // Supongamos que el método obten_filtro_especial() procesa correctamente el filtro y retorna:
+     * // "productos.precio > '100'"
+     *
+     * $resultado = $objeto->filtro_especial_sql($columnas_extra, $filtro_especial);
+     * // Resultado esperado:
+     * // "productos.precio > '100'"
+     * ```
+     *
+     * @example Ejemplo 2: Uso exitoso con múltiples filtros especiales
+     * ```php
+     * $columnas_extra = [
+     *     'tabla.precio' => 'productos.precio',
+     *     'tabla.stock'  => 'productos.stock'
+     * ];
+     * $filtro_especial = [
+     *     'tabla.precio' => [
+     *         'operador' => '>',
+     *         'valor' => 100,
+     *         'comparacion' => 'AND'
+     *     ],
+     *     'tabla.stock' => [
+     *         'operador' => '<',
+     *         'valor' => 50,
+     *         'comparacion' => 'AND'
+     *     ]
+     * ];
+     *
+     * // Supongamos que:
+     * // - Para 'tabla.precio' se genera: "productos.precio > '100'"
+     * // - Para 'tabla.stock' se genera: "productos.stock < '50'"
+     * // La concatenación final (dependiendo de la lógica interna de obten_filtro_especial) sería:
+     * $resultado = $objeto->filtro_especial_sql($columnas_extra, $filtro_especial);
+     * // Resultado esperado (ejemplo):
+     * // "productos.precio > '100' AND productos.stock < '50'"
+     * ```
+     *
+     * @example Ejemplo 3: Error al procesar un filtro especial (clave no es un array)
+     * ```php
+     * $columnas_extra = ['tabla.precio' => 'productos.precio'];
+     * $filtro_especial = [
+     *     'tabla.precio' => "no_es_un_array"
+     * ];
+     *
+     * $resultado = $objeto->filtro_especial_sql($columnas_extra, $filtro_especial);
+     * // Resultado esperado: Un arreglo de error indicando "Error filtro debe ser un array filtro_especial[] = array()"
+     * ```
      */
-    final public function filtro_especial_sql(array $columnas_extra, array $filtro_especial):array|string
-    {
-
+    final public function filtro_especial_sql(array $columnas_extra, array $filtro_especial): array|string {
         $filtro_especial_sql = '';
-        foreach ($filtro_especial as $campo=>$filtro_esp){
-            if(!is_array($filtro_esp)){
-
-                return $this->error->error(mensaje: "Error filtro debe ser un array filtro_especial[] = array()",
-                    data: $filtro_esp, es_final: true);
+        foreach ($filtro_especial as $campo => $filtro_esp) {
+            if (!is_array($filtro_esp)) {
+                return $this->error->error(
+                    mensaje: "Error filtro debe ser un array filtro_especial[] = array()",
+                    data: $filtro_esp,
+                    es_final: true
+                );
             }
 
-            $filtro_especial_sql = $this->obten_filtro_especial(columnas_extra: $columnas_extra,
-                filtro_esp: $filtro_esp, filtro_especial_sql: $filtro_especial_sql);
-            if(errores::$error){
-                return $this->error->error(mensaje:"Error filtro", data: $filtro_especial_sql);
+            $filtro_especial_sql = $this->obten_filtro_especial(
+                columnas_extra: $columnas_extra,
+                filtro_esp: $filtro_esp,
+                filtro_especial_sql: $filtro_especial_sql
+            );
+            if (errores::$error) {
+                return $this->error->error(
+                    mensaje: "Error filtro",
+                    data: $filtro_especial_sql
+                );
             }
         }
         return $filtro_especial_sql;
     }
 
+
     /**
-     * TOTAL
-     * Funcion que genera las condiciones de sql de un filtro extra
+     * REG
+     * Genera una cláusula SQL extra a partir de un conjunto de filtros adicionales.
      *
-     * @param array $filtro_extra arreglo que contiene las condiciones
-     * $filtro_extra[0]['tabla.campo']=array('operador'=>'>','valor'=>'x','comparacion'=>'AND');
-     * @example
-     *      $filtro_extra[0][tabla.campo]['operador'] = '<';
-     *      $filtro_extra[0][tabla.campo]['valor'] = 'x';
+     * Este método recorre el array `$filtro_extra`, donde cada elemento representa un filtro adicional que se desea
+     * integrar en la cláusula SQL final. Para cada filtro, se realiza lo siguiente:
      *
-     *      $filtro_extra[0][tabla2.campo]['operador'] = '>';
-     *      $filtro_extra[0][tabla2.campo]['valor'] = 'x';
-     *      $filtro_extra[0][tabla2.campo]['comparacion'] = 'OR';
+     * 1. Se valida que el filtro (cada elemento de `$filtro_extra`) sea un array. Si no lo es, se retorna un error
+     *    indicando que cada filtro debe ser un array.
+     * 2. Se llama al método `integra_filtro_extra()` para integrar el filtro actual en la cadena SQL acumulada (`$filtro_extra_sql`).
+     * 3. Si ocurre algún error durante la integración de cualquier filtro, se retorna un error con los detalles del mismo.
      *
-     *      $resultado = filtro_extra_sql($filtro_extra);
-     *      $resultado =  tabla.campo < 'x' OR tabla2.campo > 'x'
+     * Al finalizar, se retorna la cadena SQL resultante que contiene la concatenación de todos los filtros extra.
      *
-     * @return array|string
-     * @uses filtro_and()
-     * @version 16.258.1
-     * @url https://github.com/gamboamartin/where/wiki/src.where.filtro_extra_sql
+     * @param array $filtro_extra Array de filtros adicionales. Cada elemento debe ser un array que defina un filtro especial.
+     *                            La estructura de cada filtro dependerá de los requerimientos del método
+     *                            `integra_filtro_extra()`.
      *
+     * @return array|string Retorna la cadena SQL resultante con los filtros extra integrados si la operación es exitosa.
+     *                      En caso de error, retorna un array con información del error.
+     *
+     * @example Ejemplo 1: Uso exitoso con múltiples filtros extra
+     * ```php
+     * // Ejemplo de filtros extra:
+     * $filtro_extra = [
+     *     [
+     *         // Suponiendo que la estructura requerida para cada filtro es la siguiente:
+     *         // (La clave 'comparacion' define el operador lógico para concatenar este filtro con otros)
+     *         'precio' => [
+     *             'operador'    => '>',
+     *             'valor'       => 100,
+     *             'comparacion' => 'AND'
+     *         ]
+     *     ],
+     *     [
+     *         'stock' => [
+     *             'operador'    => '<',
+     *             'valor'       => 50,
+     *             'comparacion' => 'AND'
+     *         ]
+     *     ]
+     * ];
+     *
+     * $resultado = $obj->filtro_extra_sql($filtro_extra);
+     * // Resultado esperado (ejemplo): "precio > '100' AND stock < '50'"
+     * ```
+     *
+     * @example Ejemplo 2: Error por filtro extra no siendo un array
+     * ```php
+     * // En este caso, un elemento del array de filtros no es un array:
+     * $filtro_extra = [
+     *     "no_es_un_array"
+     * ];
+     *
+     * $resultado = $obj->filtro_extra_sql($filtro_extra);
+     * // Resultado esperado: Array de error indicando "Error $data_filtro debe ser un array"
+     * ```
      */
-    final public function filtro_extra_sql(array $filtro_extra):array|string
-    {
+    final public function filtro_extra_sql(array $filtro_extra): array|string {
         $filtro_extra_sql = '';
-        foreach($filtro_extra as $data_filtro){
-            if(!is_array($data_filtro)){
-                return $this->error->error(mensaje: 'Error $data_filtro debe ser un array',data: $filtro_extra,
-                    es_final: true);
+        foreach ($filtro_extra as $data_filtro) {
+            if (!is_array($data_filtro)) {
+                return $this->error->error(
+                    mensaje: 'Error $data_filtro debe ser un array',
+                    data: $filtro_extra,
+                    es_final: true
+                );
             }
             $filtro_extra_sql = $this->integra_filtro_extra(
-                data_filtro: $data_filtro, filtro_extra_sql: $filtro_extra_sql);
-            if(errores::$error){
-                return $this->error->error(mensaje: 'Error al generar filtro',data:  $filtro_extra_sql);
+                data_filtro: $data_filtro,
+                filtro_extra_sql: $filtro_extra_sql
+            );
+            if (errores::$error) {
+                return $this->error->error(
+                    mensaje: 'Error al generar filtro',
+                    data: $filtro_extra_sql
+                );
             }
         }
-
         return $filtro_extra_sql;
     }
+
 
     /**
-     * TOTAL
-     * Función filtro_extra_sql_genera
+     * REG
+     * Genera o actualiza una cadena SQL para un filtro extra, concatenando una condición adicional.
      *
-     * @param string $comparacion La cadena de texto utilizada para comparar
-     * @param string $condicion La cadena de texto que representa la condición
-     * @param string $filtro_extra_sql Una expresión SQL adicional que se añadirá al filtro
-     * @return string $filtro_extra_sql Retorna la cadena de texto SQL actualizada
+     * Este método se utiliza para construir o complementar una cláusula SQL adicional (por ejemplo, en un WHERE)
+     * con una nueva condición. La lógica es la siguiente:
      *
-     * Esta función genera un filtro SQL adicional a partir de las condiciones y la cadena de comparación proporcionadas.
-     * Si el filtro SQL adicional ya está establecido, la función añadirá la condición a este utilizando la cadena de comparación.
-     * Sin embargo, si el filtro SQL adicional no está establecido, la función simplemente añadirá la condición a este.
-     * Finalmente, la función devuelve el filtro SQL adicional actualizado.
-     * @version 16.252.1
-     * @url https://github.com/gamboamartin/where/wiki/src.where.filtro_extra_sql_genera
+     * - Si la cadena `$filtro_extra_sql` está vacía, se asigna directamente el valor de `$condicion` a la misma.
+     * - Si `$filtro_extra_sql` ya contiene contenido, se concatena a ésta el operador de comparación (`$comparacion`)
+     *   seguido de la nueva condición (`$condicion`), sin agregar espacios adicionales, según cómo se hayan definido
+     *   estos parámetros.
+     *
+     * De esta forma, permite ir acumulando condiciones en una sentencia SQL extra.
+     *
+     * @param string $comparacion   El operador lógico que se utilizará para unir la condición nueva con la existente.
+     *                              Ejemplos comunes: " AND " o " OR ".
+     * @param string $condicion     La nueva condición SQL a agregar. Por ejemplo, "tabla.campo > '100'".
+     * @param string $filtro_extra_sql La cadena SQL existente a la cual se le añadirá la nueva condición.
+     *                                 Si está vacía, se inicializa con el valor de `$condicion`.
+     *
+     * @return string               Devuelve la cadena SQL resultante tras concatenar la nueva condición.
+     *
+     * @example Ejemplo 1: Sin filtro extra previo
+     * ```php
+     * // Si no hay condiciones previas, $filtro_extra_sql está vacío.
+     * $comparacion = " AND ";
+     * $condicion = "tabla.campo > '100'";
+     * $filtro_extra_sql = "";
+     *
+     * $resultado = $obj->filtro_extra_sql_genera($comparacion, $condicion, $filtro_extra_sql);
+     * // Resultado esperado: "tabla.campo > '100'"
+     * ```
+     *
+     * @example Ejemplo 2: Con filtro extra previo
+     * ```php
+     * // Si ya existe una condición previa en $filtro_extra_sql, se concatena el operador y la nueva condición.
+     * $comparacion = " OR ";
+     * $condicion = "tabla.campo < '200'";
+     * $filtro_extra_sql = "tabla.campo = '150'";
+     *
+     * $resultado = $obj->filtro_extra_sql_genera($comparacion, $condicion, $filtro_extra_sql);
+     * // Resultado esperado: "tabla.campo = '150' OR tabla.campo < '200'"
+     * ```
      */
-    private function filtro_extra_sql_genera(string $comparacion, string $condicion, string $filtro_extra_sql): string
-    {
-        if($filtro_extra_sql === ''){
+    private function filtro_extra_sql_genera(string $comparacion, string $condicion, string $filtro_extra_sql): string {
+        if ($filtro_extra_sql === '') {
             $filtro_extra_sql .= $condicion;
-        }
-        else {
-            $filtro_extra_sql .=  $comparacion . $condicion;
+        } else {
+            $filtro_extra_sql .= $comparacion . $condicion;
         }
         return $filtro_extra_sql;
-
     }
+
 
     /**
      * TOTAL
@@ -1598,70 +1864,120 @@ class where
 
 
     /**
-     * TOTAL
-     * Genera la condicion sql de un filtro especial
+     * REG
+     * Genera o actualiza la cláusula SQL para un filtro especial concatenando una condición adicional.
      *
+     * Este método se utiliza para construir o complementar una cláusula SQL especial en función de la condición
+     * ya existente y la nueva condición que se desea agregar. El comportamiento es el siguiente:
      *
-     * @param string $filtro_especial_sql //condicion en forma de sql
-     * @param string $data_sql //condicion en forma de sql
-     * @param array $filtro_esp //array con datos del filtro array('tabla.campo','AND')
-     * @param string  $campo //string con el nombre del campo
+     * - Si el parámetro `$filtro_especial_sql` está vacío, se asigna el valor de `$data_sql` a `$filtro_especial_sql`.
+     * - Si `$filtro_especial_sql` ya contiene información, se verifica que en el arreglo `$filtro_esp` exista
+     *   la clave `'comparacion'` para el campo dado en `$campo`. Si no existe, se retorna un error.
+     * - Además, se valida que `$data_sql` no sea una cadena vacía. Si lo es, se retorna un error.
+     * - Si todas las validaciones son satisfactorias, se concatena a `$filtro_especial_sql` un espacio, el valor
+     *   de `$filtro_esp[$campo]['comparacion']` (por ejemplo, "AND" u "OR"), otro espacio y finalmente `$data_sql`.
      *
-     * @example
-     *      Ej 1
-     *      $filtro_especial_sql = '';
-     *      $data_sql = '';
-     *      $filtro_esp = array();
-     *      $campo = '';
-     *      $resultado = genera_filtro_especial($filtro_especial_sql, $data_sql,$filtro_esp,$campo);
-     *      $resultado = string vacio
+     * De este modo, el método permite integrar condicionalmente una nueva condición SQL en una cláusula especial ya existente.
      *
+     * @param string $campo              El nombre del campo al que se aplica el filtro especial. Este valor se utiliza
+     *                                   para acceder a la clave correspondiente en el arreglo `$filtro_esp` y obtener el
+     *                                   operador de comparación.
+     * @param string $data_sql           La cadena SQL que representa la nueva condición que se desea agregar. Por ejemplo,
+     *                                   podría ser `"tabla.campo > 'valor'"`.
+     * @param array  $filtro_esp         Arreglo asociativo que contiene, para cada campo, los parámetros del filtro especial.
+     *                                   Debe incluir la clave `'comparacion'` para el campo `$campo`, que especifica el operador
+     *                                   lógico (por ejemplo, `"AND"` u `"OR"`) que se usará para concatenar la condición.
+     *                                   Ejemplo:
+     *                                   ```php
+     *                                   [
+     *                                       'tabla.campo' => [
+     *                                           'comparacion' => 'AND'
+     *                                       ]
+     *                                   ]
+     *                                   ```
+     * @param string $filtro_especial_sql  La cadena SQL existente para el filtro especial que se desea complementar.
+     *                                     Si está vacía, se inicializa con el valor de `$data_sql`.
      *
-     *      Ej 2
-     *      $filtro_especial_sql = 'tabla.campo = 1';
-     *      $data_sql = 'tabla.campo2 = 1';
-     *      $filtro_esp['tabla.campo2']['comparacion'] = 'OR'
-     *      $campo = 'tabla.campo2';
-     *      $resultado = genera_filtro_especial($filtro_especial_sql, $data_sql,$filtro_esp,$campo);
-     *      $resultado = tabla.campo = 1 OR tabla.campo2 = 1
+     * @return array|string              Retorna la cadena SQL resultante con la condición especial actualizada si la operación es exitosa;
+     *                                   de lo contrario, retorna un array con los detalles del error.
      *
-     *      Ej 3
-     *      $filtro_especial_sql = 'tabla.campo = 1';
-     *      $data_sql = 'tabla.campo2 = 1';
-     *      $filtro_esp['tabla.campo2']['comparacion'] = 'AND'
-     *      $campo = 'tabla.campo2';
-     *      $resultado = genera_filtro_especial($filtro_especial_sql, $data_sql,$filtro_esp,$campo);
-     *      $resultado = tabla.campo = 1 AND tabla.campo2 = 1
+     * @example Ejemplo 1: Filtro especial sin condición previa
+     * ```php
+     * // Si no existe una cláusula previa, se asigna data_sql directamente.
+     * $campo = 'tabla.campo';
+     * $data_sql = "tabla.campo > '100'";
+     * $filtro_esp = [
+     *     'tabla.campo' => [
+     *         'comparacion' => 'AND'
+     *     ]
+     * ];
+     * $filtro_especial_sql = ""; // Vacío inicialmente
      *
+     * $resultado = $objeto->genera_filtro_especial($campo, $data_sql, $filtro_esp, $filtro_especial_sql);
+     * // Resultado esperado:
+     * // "tabla.campo > '100'"
+     * ```
      *
-     * @return array|string
-     * @throws errores $filtro_especial_sql != '' $filtro_esp[$campo]['comparacion'] no existe,
-     *  Debe existir $filtro_esp[$campo]['comparacion']
-     * @throws errores $filtro_especial_sql != '' = $data_sql = '',  data_sql debe tener info
-     * @version 16.182.0
-     * @url https://github.com/gamboamartin/where/wiki/src.where.genera_filtro_especial
+     * @example Ejemplo 2: Filtro especial con condición previa
+     * ```php
+     * // Se tiene una condición previa y se desea agregar otra condición con un operador lógico.
+     * $campo = 'tabla.campo';
+     * $data_sql = "tabla.campo < '200'";
+     * $filtro_esp = [
+     *     'tabla.campo' => [
+     *         'comparacion' => 'OR'
+     *     ]
+     * ];
+     * $filtro_especial_sql = "tabla.campo = '150'";
+     *
+     * $resultado = $objeto->genera_filtro_especial($campo, $data_sql, $filtro_esp, $filtro_especial_sql);
+     * // Resultado esperado:
+     * // "tabla.campo = '150' OR tabla.campo < '200'"
+     * ```
+     *
+     * @example Ejemplo 3: Error por falta de la clave 'comparacion'
+     * ```php
+     * $campo = 'tabla.campo';
+     * $data_sql = "tabla.campo > '100'";
+     * $filtro_esp = [
+     *     'tabla.campo' => [
+     *         // 'comparacion' no está definida
+     *     ]
+     * ];
+     * $filtro_especial_sql = "tabla.campo = '150'";
+     *
+     * $resultado = $objeto->genera_filtro_especial($campo, $data_sql, $filtro_esp, $filtro_especial_sql);
+     * // Resultado esperado: Array de error indicando que $filtro_esp['tabla.campo']['comparacion'] debe existir.
+     * ```
      */
     final public function genera_filtro_especial(
-        string $campo, string $data_sql, array $filtro_esp, string $filtro_especial_sql):array|string
-    {
-        if($filtro_especial_sql === ''){
+        string $campo,
+        string $data_sql,
+        array $filtro_esp,
+        string $filtro_especial_sql
+    ): array|string {
+        if ($filtro_especial_sql === '') {
             $filtro_especial_sql .= $data_sql;
-        }
-        else{
-            if(!isset($filtro_esp[$campo]['comparacion'])){
-                return $this->error->error(mensaje: 'Error $filtro_esp[$campo][\'comparacion\'] debe existir',
-                    data: $filtro_esp, es_final: true);
+        } else {
+            if (!isset($filtro_esp[$campo]['comparacion'])) {
+                return $this->error->error(
+                    mensaje: 'Error $filtro_esp[$campo][\'comparacion\'] debe existir',
+                    data: $filtro_esp,
+                    es_final: true
+                );
             }
-            if(trim($data_sql) === ''){
-                return $this->error->error(mensaje:'Error $data_sql no puede venir vacio', data:$data_sql,
-                    es_final: true);
+            if (trim($data_sql) === '') {
+                return $this->error->error(
+                    mensaje: 'Error $data_sql no puede venir vacio',
+                    data: $data_sql,
+                    es_final: true
+                );
             }
-
-            $filtro_especial_sql .= ' '.$filtro_esp[$campo]['comparacion'].' '.$data_sql;
+            $filtro_especial_sql .= ' ' . $filtro_esp[$campo]['comparacion'] . ' ' . $data_sql;
         }
-
         return $filtro_especial_sql;
     }
+
 
     /**
      * REG
@@ -2055,40 +2371,138 @@ class where
 
 
     /**
-     * TOTAL
-     * Esta función toma un filtro adicional y lo integra a la consulta SQL actual.
-     * Recibe una matriz de datos del filtro y una cadena que representa el filtro SQL extra.
+     * REG
+     * Integra un filtro extra en una cláusula SQL existente.
      *
-     * @param array $data_filtro La matriz de datos del filtro. La función devuelve un error si la matriz está vacía.
-     * @param string $filtro_extra_sql La cadena que representa el filtro extra para la consulta SQL.
+     * Este método toma un array de datos de filtro especial y una cadena SQL existente para filtros extra,
+     * y concatena la nueva condición al filtro existente. El proceso es el siguiente:
      *
-     * Si se produce algún error durante el proceso, la función retornará detalles sobre el error.
+     * 1. Verifica que el array `$data_filtro` no esté vacío. Si lo está, retorna un error indicando que los datos del filtro están vacíos.
+     * 2. Llama al método `datos_filtro_especial()` para procesar y obtener los detalles del filtro especial a partir de `$data_filtro`.
+     *    Este método devuelve un objeto `stdClass` con las propiedades:
+     *      - `campo`: El nombre del campo filtrado.
+     *      - `operador`: El operador de comparación (por ejemplo, ">", "<", "=").
+     *      - `valor`: El valor (escapado) a comparar.
+     *      - `comparacion`: El operador lógico que se usará para concatenar (por ejemplo, "AND" u "OR").
+     *      - `condicion`: La condición SQL generada, por ejemplo, `"precio>'100'"`.
+     *    Si ocurre un error, se retorna el error respectivo.
+     * 3. Utiliza el método `filtro_extra_sql_genera()` para concatenar la condición obtenida (`$datos->condicion`) al
+     *    filtro SQL extra existente (`$filtro_extra_sql`), utilizando el operador lógico definido en `$datos->comparacion`.
+     *    - Si `$filtro_extra_sql` está vacío, se asigna directamente el valor de `$datos->condicion`.
+     *    - En caso de error en la concatenación, se retorna el error correspondiente.
+     * 4. Retorna la cadena SQL final con la condición extra integrada.
      *
-     * @return object|string|array Retorna el filtro SQL extra integrado en caso de éxito. Si ocurre un error,
-     *  retorna un objeto de error.
-     * @version 16.257.1
-     * @url https://github.com/gamboamartin/where/wiki/src.where.integra_filtro_extra
+     * @param array  $data_filtro     Array que contiene los datos del filtro especial. Debe tener la siguiente estructura:
+     *                                ```php
+     *                                [
+     *                                    'nombre_campo' => [
+     *                                        'operador'    => (string),  // Ej.: '>', '<', '='
+     *                                        'valor'       => (mixed),   // Ej.: 100, 'activo'
+     *                                        'comparacion' => (string)   // Ej.: 'AND', 'OR'
+     *                                    ]
+     *                                ]
+     *                                ```
+     * @param string $filtro_extra_sql La cadena SQL existente con filtros extra que se desea complementar.
+     *
+     * @return object|string|array Retorna:
+     *                              - Una cadena SQL que representa el filtro extra actualizado,
+     *                              - Un objeto `stdClass` en ciertos contextos, o
+     *                              - Un array con los detalles del error si ocurre alguna falla.
+     *
+     * @example Ejemplo 1: Integración exitosa sin filtro extra previo
+     * ```php
+     * // Supongamos que:
+     * // $data_filtro contiene:
+     * // [
+     * //     'precio' => [
+     * //         'operador'    => '>',
+     * //         'valor'       => 100,
+     * //         'comparacion' => 'AND'
+     * //     ]
+     * // ]
+     * // Y que el método datos_filtro_especial() genera:
+     * // stdClass {
+     * //     campo       => "precio",
+     * //     operador    => ">",
+     * //     valor       => "100",
+     * //     comparacion => "AND",
+     * //     condicion   => "precio>'100'"
+     * // }
+     * // Además, $filtro_extra_sql es una cadena vacía.
+     *
+     * $filtro_extra_sql = "";
+     * $resultado = $obj->integra_filtro_extra($data_filtro, $filtro_extra_sql);
+     * // Resultado esperado:
+     * // "precio>'100'"
+     * ```
+     *
+     * @example Ejemplo 2: Integración exitosa con filtro extra previo
+     * ```php
+     * // Supongamos que:
+     * // $data_filtro contiene:
+     * // [
+     * //     'precio' => [
+     * //         'operador'    => '<',
+     * //         'valor'       => 200,
+     * //         'comparacion' => 'OR'
+     * //     ]
+     * // ]
+     * // Y que el método datos_filtro_especial() genera:
+     * // stdClass {
+     * //     campo       => "precio",
+     * //     operador    => "<",
+     * //     valor       => "200",
+     * //     comparacion => "OR",
+     * //     condicion   => "precio<'200'"
+     * // }
+     * // Además, $filtro_extra_sql tiene un valor previo, por ejemplo: "precio = '150'".
+     *
+     * $filtro_extra_sql = "precio = '150'";
+     * $resultado = $obj->integra_filtro_extra($data_filtro, $filtro_extra_sql);
+     * // Resultado esperado:
+     * // "precio = '150' OR precio<'200'"
+     * ```
+     *
+     * @example Ejemplo 3: Error por array de filtro vacío
+     * ```php
+     * $data_filtro = []; // Array vacío
+     * $filtro_extra_sql = "";
+     * $resultado = $obj->integra_filtro_extra($data_filtro, $filtro_extra_sql);
+     * // Resultado esperado: Array de error indicando "Error data_filtro esta vacio"
+     * ```
      */
-    private function integra_filtro_extra(array $data_filtro, string $filtro_extra_sql): object|string|array
-    {
-        if(count($data_filtro) === 0){
-            return $this->error->error(mensaje:'Error data_filtro esta vacio',  data:$data_filtro, es_final: true);
+    private function integra_filtro_extra(array $data_filtro, string $filtro_extra_sql): object|string|array {
+        if (count($data_filtro) === 0) {
+            return $this->error->error(
+                mensaje: 'Error data_filtro esta vacio',
+                data: $data_filtro,
+                es_final: true
+            );
         }
 
         $datos = $this->datos_filtro_especial(data_filtro: $data_filtro);
-        if(errores::$error){
-            return $this->error->error(mensaje: 'Error al obtener datos de filtro',data:  $datos);
+        if (errores::$error) {
+            return $this->error->error(
+                mensaje: 'Error al obtener datos de filtro',
+                data: $datos
+            );
         }
 
-        $filtro_extra_sql = $this->filtro_extra_sql_genera(comparacion: $datos->comparacion,
-            condicion:  $datos->condicion,filtro_extra_sql:  $filtro_extra_sql);
-        if(errores::$error){
-            return $this->error->error(mensaje: 'Error al generar filtro',data:  $filtro_extra_sql);
+        $filtro_extra_sql = $this->filtro_extra_sql_genera(
+            comparacion: $datos->comparacion,
+            condicion: $datos->condicion,
+            filtro_extra_sql: $filtro_extra_sql
+        );
+        if (errores::$error) {
+            return $this->error->error(
+                mensaje: 'Error al generar filtro',
+                data: $filtro_extra_sql
+            );
         }
 
         return $filtro_extra_sql;
-
     }
+
 
     /**
      * REG
@@ -2334,63 +2748,118 @@ class where
     }
 
     /**
-     * TOTAL
+     * REG
+     * Genera la parte SQL para un filtro especial basado en un campo, un conjunto de columnas adicionales y un arreglo de filtro.
      *
-     * Genera la condicion sql de un filtro especial
+     * Este método se utiliza para construir la parte de una consulta SQL que representa un filtro especial para un campo
+     * específico. El proceso es el siguiente:
      *
-     * @param string $campo campo de una tabla tabla.campo
-     * @param array $columnas_extra Campos en forma de subquery del modelo
-     * @param array $filtro filtro a validar
+     * 1. Se recorta el campo `$campo` para eliminar espacios en blanco.
+     * 2. Se valida que el filtro especial para el campo tenga la estructura correcta mediante el método
+     *    `valida_data_filtro_especial()` de la clase `validaciones`. Si la validación falla, se retorna un error.
+     * 3. Se comprueba que en el arreglo `$filtro[$campo]` exista la clave `'valor'` utilizando el método
+     *    `valida_existencia_keys()`. Si la clave no existe, se retorna un error.
+     * 4. Se guarda el nombre original del campo en la variable `$campo_filtro` para su uso posterior.
+     * 5. Se obtiene el nombre correcto del campo para el filtro especial llamando al método `campo_filtro_especial()`,
+     *    pasando el campo y el arreglo `$columnas_extra`. Esto permite que, en caso de existir una definición especial
+     *    para el campo (por ejemplo, una subconsulta), se sobrescriba el nombre del campo.
+     * 6. Finalmente, se genera la cadena SQL para el filtro especial mediante el método `data_sql()`, que utiliza el
+     *    campo corregido, el campo original y el arreglo `$filtro` para construir la condición SQL.
      *
-     * @return array|string
+     * Si todas las validaciones son exitosas, el método retorna la cadena SQL resultante. En caso de error, se retorna
+     * un array con los detalles del error.
      *
-     * @example
-     *      Ej 1
-     *      $campo = 'x';
-     *      $filtro['x'] = array('operador'=>'x','valor'=>'x');
-     *      $resultado = maqueta_filtro_especial($campo, $filtro);
-     *      $resultado = x>'x'
+     * @param string $campo          El nombre del campo para el cual se genera el filtro especial.
+     *                               Ejemplo: "precio"
+     * @param array  $columnas_extra Array asociativo con definiciones adicionales para los campos.
+     *                               Ejemplo:
+     *                               ```php
+     *                               [
+     *                                   'precio' => 'productos.precio'
+     *                               ]
+     *                               ```
+     * @param array  $filtro         Arreglo que define el filtro especial para el campo. Debe incluir al menos las claves:
+     *                               - 'operador': el operador de comparación (por ejemplo, ">", "<", "=")
+     *                               - 'valor': el valor a comparar.
+     *                               Ejemplo:
+     *                               ```php
+     *                               [
+     *                                   'precio' => [
+     *                                       'operador' => '>',
+     *                                       'valor' => 100
+     *                                   ]
+     *                               ]
+     *                               ```
      *
-     *      Ej 2
-     *      $campo = 'x';
-     *      $filtro['x'] = array('operador'=>'x','valor'=>'x','es_campo'=>true);
-     *      $resultado = maqueta_filtro_especial($campo, $filtro);
-     *      $resultado = 'x'> x
+     * @return array|string          Devuelve una cadena SQL que representa el filtro especial, o un array con información
+     *                               de error si ocurre alguna falla durante el proceso.
      *
-     * @version 16.164.0
-     * @url https://github.com/gamboamartin/where/wiki/src.where.maqueta_filtro_especial
+     * @example Ejemplo de uso exitoso:
+     * ```php
+     * // Definición de parámetros:
+     * $campo = 'precio';
+     * $columnas_extra = ['precio' => 'productos.precio'];
+     * $filtro = [
+     *     'precio' => [
+     *         'operador' => '>',
+     *         'valor' => 100
+     *     ]
+     * ];
+     *
+     * // Llamada al método:
+     * $sql_filtro = $obj->maqueta_filtro_especial($campo, $columnas_extra, $filtro);
+     *
+     * // Supongamos que:
+     * // - El método campo_filtro_especial() retorna "productos.precio"
+     * // - El método data_sql() construye la cadena "productos.precio > '100'"
+     * // Entonces, el resultado será:
+     * // "productos.precio > '100'"
+     * ```
+     *
+     * @example Ejemplo de error (falta la clave 'operador'):
+     * ```php
+     * $campo = 'precio';
+     * $columnas_extra = ['precio' => 'productos.precio'];
+     * $filtro = [
+     *     'precio' => [
+     *         // 'operador' no está definido
+     *         'valor' => 100
+     *     ]
+     * ];
+     *
+     * $sql_filtro = $obj->maqueta_filtro_especial($campo, $columnas_extra, $filtro);
+     * // Resultado esperado: Array de error indicando "Error debe existir $filtro[precio][operador]"
+     * ```
      */
-    private function maqueta_filtro_especial(string $campo, array $columnas_extra, array $filtro):array|string
-    {
+    private function maqueta_filtro_especial(string $campo, array $columnas_extra, array $filtro): array|string {
         $campo = trim($campo);
 
-        $valida = (new validaciones())->valida_data_filtro_especial(campo: $campo,filtro:  $filtro);
-        if(errores::$error){
+        $valida = (new validaciones())->valida_data_filtro_especial(campo: $campo, filtro: $filtro);
+        if (errores::$error) {
             return $this->error->error(mensaje: 'Error al validar filtro', data: $valida);
         }
 
-        $keys = array('valor');
+        $keys = ['valor'];
         $valida = $this->validacion->valida_existencia_keys(keys: $keys, registro: $filtro[$campo]);
-        if(errores::$error){
-            return $this->error->error(mensaje:'Error al validar filtro',  data:$valida);
+        if (errores::$error) {
+            return $this->error->error(mensaje: 'Error al validar filtro', data: $valida);
         }
-
 
         $campo_filtro = $campo;
 
-        $campo = $this->campo_filtro_especial(campo: $campo,columnas_extra:  $columnas_extra);
-        if(errores::$error){
-            return $this->error->error(mensaje:'Error al obtener campo',  data:$campo);
+        $campo = $this->campo_filtro_especial(campo: $campo, columnas_extra: $columnas_extra);
+        if (errores::$error) {
+            return $this->error->error(mensaje: 'Error al obtener campo', data: $campo);
         }
 
-        $data_sql = $this->data_sql(campo: $campo,campo_filtro:  $campo_filtro,filtro:  $filtro);
-        if(errores::$error){
-            return $this->error->error(mensaje:'Error al genera sql',  data:$data_sql);
+        $data_sql = $this->data_sql(campo: $campo, campo_filtro: $campo_filtro, filtro: $filtro);
+        if (errores::$error) {
+            return $this->error->error(mensaje: 'Error al genera sql', data: $data_sql);
         }
-
 
         return $data_sql;
     }
+
 
     /**
      * TOTAL
@@ -2443,55 +2912,140 @@ class where
     }
 
     /**
-     * TOTAL
-     * Genera la condicion sql de un filtro especial
-     * @param array $columnas_extra Conjunto de columnas en forma de subquery
-     * @param array $filtro_esp //array con datos del filtro $filtro_esp[tabla.campo]= array('operador'=>'AND','valor'=>'x');
+     * REG
+     * Genera y actualiza la cláusula SQL para un filtro especial, integrando la condición SQL generada
+     * a partir del arreglo de filtro especial con una cláusula SQL previa, si existe.
      *
-     * @param string $filtro_especial_sql //condicion en forma de sql
-     * @return array|string
-     * @example
-     *      Ej 1
-     *      $filtro_esp[tabla.campo]['operador'] = '>';
-     *      $filtro_esp[tabla.campo]['valor'] = 'x';
-     *      $filtro_especial_sql = '';
-     *      $resultado = obten_filtro_especial($filtro_esp, $filtro_especial_sql);
-     *      $resultado =  tabla.campo > 'x'
+     * El método sigue estos pasos:
      *
-     *      Ej 2
-     *      $filtro_esp[tabla.campo]['operador'] = '>';
-     *      $filtro_esp[tabla.campo]['valor'] = 'x';
-     *      $filtro_esp[tabla.campo]['comparacion'] = ' AND ';
-     *      $filtro_especial_sql = ' tabla.campo2 = 1';
-     *      $resultado = obten_filtro_especial($filtro_esp, $filtro_especial_sql);
-     *      $resultado =  tabla.campo > 'x' AND tabla.campo2 = 1
-     * @version 16.195.0
-     * @url https://github.com/gamboamartin/where/wiki/src.where.obten_filtro_especial
+     * 1. Extrae el primer campo (clave) del arreglo `$filtro_esp` mediante `key($filtro_esp)`,
+     *    lo recorta y lo asigna a `$campo`.
      *
+     * 2. Valida la estructura del filtro especial para ese campo llamando a
+     *    {@see \gamboamartin\src\validaciones;::valida_data_filtro_especial()}.
+     *    - Si la validación falla, retorna un error con los detalles obtenidos.
+     *
+     * 3. Llama al método {@see maqueta_filtro_especial()} para generar la parte SQL correspondiente
+     *    al filtro especial basado en el campo, utilizando las definiciones adicionales en `$columnas_extra`
+     *    y el arreglo `$filtro_esp`. Si ocurre un error, retorna el error correspondiente.
+     *
+     * 4. Utiliza el método {@see genera_filtro_especial()} para integrar la nueva condición SQL (`$data_sql`)
+     *    con la cláusula SQL especial preexistente (`$filtro_especial_sql`):
+     *    - Si `$filtro_especial_sql` está vacío, se inicializa con `$data_sql`.
+     *    - Si no, se verifica que en `$filtro_esp[$campo]` exista la clave `'comparacion'` y que `$data_sql`
+     *      no esté vacío, para luego concatenar la comparación (por ejemplo, "AND" u "OR") y `$data_sql`
+     *      a la cláusula existente.
+     *    - Si ocurre algún error en este paso, se retorna el error correspondiente.
+     *
+     * 5. Finalmente, retorna la cláusula SQL especial resultante.
+     *
+     * @param array  $columnas_extra      Array asociativo con definiciones adicionales para los campos.
+     *                                    Ejemplo:
+     *                                    ```php
+     *                                    [
+     *                                        'tabla.precio' => 'productos.precio'
+     *                                    ]
+     *                                    ```
+     * @param array  $filtro_esp          Arreglo que define el filtro especial para un campo.
+     *                                    Debe tener una estructura similar a:
+     *                                    ```php
+     *                                    [
+     *                                        'tabla.precio' => [
+     *                                            'operador' => '>',
+     *                                            'valor' => 100,
+     *                                            'comparacion' => 'AND'
+     *                                        ]
+     *                                    ]
+     *                                    ```
+     * @param string $filtro_especial_sql La cláusula SQL especial preexistente a la que se desea agregar
+     *                                    la nueva condición. Si está vacía, se usará el resultado de `$data_sql`.
+     *
+     * @return array|string              Devuelve la cláusula SQL final del filtro especial si la operación es exitosa;
+     *                                    de lo contrario, retorna un array con información de error.
+     *
+     * @example Ejemplo 1: Sin cláusula SQL previa
+     * ```php
+     * // Supongamos que:
+     * // - $columnas_extra = ['tabla.precio' => 'productos.precio'];
+     * // - $filtro_esp = [
+     * //       'tabla.precio' => [
+     * //           'operador' => '>',
+     * //           'valor' => 100,
+     * //           'comparacion' => 'AND'
+     * //       ]
+     * //   ];
+     * // - $filtro_especial_sql = ""; (vacío)
+     *
+     * $resultado = $obj->obten_filtro_especial($columnas_extra, $filtro_esp, $filtro_especial_sql);
+     * // Resultado esperado (si no hay errores):
+     * // "productos.precio > '100'"
+     * ```
+     *
+     * @example Ejemplo 2: Con cláusula SQL previa
+     * ```php
+     * // Supongamos que:
+     * // - $columnas_extra = ['tabla.precio' => 'productos.precio'];
+     * // - $filtro_esp = [
+     * //       'tabla.precio' => [
+     * //           'operador' => '<',
+     * //           'valor' => 200,
+     * //           'comparacion' => 'OR'
+     * //       ]
+     * //   ];
+     * // - $filtro_especial_sql = "productos.precio = '150'";
+     *
+     * $resultado = $obj->obten_filtro_especial($columnas_extra, $filtro_esp, $filtro_especial_sql);
+     * // Resultado esperado:
+     * // "productos.precio = '150' OR productos.precio < '200'"
+     * ```
+     *
+     * @example Ejemplo 3: Error en la estructura del filtro especial
+     * ```php
+     * // Si $filtro_esp no contiene la clave 'operador' para el campo
+     * $columnas_extra = ['tabla.precio' => 'productos.precio'];
+     * $filtro_esp = [
+     *     'tabla.precio' => [
+     *         // Falta 'operador'
+     *         'valor' => 100
+     *     ]
+     * ];
+     * $filtro_especial_sql = "";
+     *
+     * $resultado = $obj->obten_filtro_especial($columnas_extra, $filtro_esp, $filtro_especial_sql);
+     * // Resultado esperado: Array de error indicando que $filtro_esp['tabla.precio']['operador'] debe existir.
+     * ```
      */
-
     private function obten_filtro_especial(
-        array $columnas_extra, array $filtro_esp, string $filtro_especial_sql):array|string
-    {
+        array $columnas_extra,
+        array $filtro_esp,
+        string $filtro_especial_sql
+    ): array|string {
         $campo = key($filtro_esp);
         $campo = trim($campo);
 
-        $valida =(new validaciones())->valida_data_filtro_especial(campo: $campo,filtro:  $filtro_esp);
-        if(errores::$error){
+        $valida = (new validaciones())->valida_data_filtro_especial(campo: $campo, filtro: $filtro_esp);
+        if (errores::$error) {
             return $this->error->error(mensaje: "Error en filtro ", data: $valida);
         }
-        $data_sql = $this->maqueta_filtro_especial(campo: $campo, columnas_extra: $columnas_extra,filtro: $filtro_esp);
-        if(errores::$error){
-            return $this->error->error(mensaje:"Error filtro", data:$data_sql);
+
+        $data_sql = $this->maqueta_filtro_especial(campo: $campo, columnas_extra: $columnas_extra, filtro: $filtro_esp);
+        if (errores::$error) {
+            return $this->error->error(mensaje:"Error filtro", data: $data_sql);
         }
-        $filtro_especial_sql_r = $this->genera_filtro_especial(campo:  $campo, data_sql: $data_sql,
-            filtro_esp: $filtro_esp, filtro_especial_sql: $filtro_especial_sql);
-        if(errores::$error){
-            return $this->error->error(mensaje:"Error filtro",data: $filtro_especial_sql_r);
+
+        $filtro_especial_sql_r = $this->genera_filtro_especial(
+            campo: $campo,
+            data_sql: $data_sql,
+            filtro_esp: $filtro_esp,
+            filtro_especial_sql: $filtro_especial_sql
+        );
+        if (errores::$error) {
+            return $this->error->error(mensaje:"Error filtro", data: $filtro_especial_sql_r);
         }
 
         return $filtro_especial_sql_r;
     }
+
 
 
     /**
