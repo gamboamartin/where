@@ -22,9 +22,12 @@
         "gamboa.martin/test": "^v5.0.0",
         "gamboa.martin/validacion": "^v5.0.0",
         "gamboa.martin/validaciones": "^v1.0.0",
-        "gamboa.martin/sql": "^v1.0.0"
+        "gamboa.martin/sql": "^v1.0.0",
+    "phpdocumentor/shim": "^3.6"
     },
-    "require-dev": {
-
+  "config": {
+    "allow-plugins": {
+      "phpdocumentor/shim": true
     }
+  }
 }

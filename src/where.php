@@ -7,23 +7,28 @@ use gamboamartin\validacion\validacion;
 use stdClass;
 
 /**
- * TOTAL
  * Clase where
  *
- * Esta clase contiene una serie de métodos para generar consultas SQL con filtros
- * como IN, NOT IN, BETWEEN, y otros. Cada método está orientado a validar y construir
- * las partes de una consulta SQL según los parámetros dados.
+ * Esta clase permite construir consultas SQL complejas mediante la generación dinámica de cláusulas y filtros.
+ * Entre sus funcionalidades se incluyen:
+ * - Generación de cláusulas SQL para filtros IN, NOT IN, BETWEEN, entre otros.
+ * - Validación y transformación de datos para asegurar la integridad y seguridad de las consultas.
+ * - Integración y concatenación de múltiples condiciones SQL a partir de diferentes filtros.
  *
- * ### Dependencias:
- * - Utiliza las clases `errores`, `sql`, `validacion`, y `validaciones`.
+ * La clase utiliza las siguientes dependencias:
+ * - **gamboamartin\errores\errores**: Manejo y registro centralizado de errores.
+ * - **gamboamartin\src\sql**: Funciones y validaciones específicas para la generación de sentencias SQL.
+ * - **gamboamartin\src\validaciones**: Métodos de validación para la existencia y el formato correcto de los datos.
+ * - **gamboamartin\validacion\validacion**: Validación de datos y construcción de condiciones SQL.
+ * - **stdClass**: Utilizado para estructurar y retornar objetos con datos procesados.
  *
- * ### Métodos principales:
- * - Filtros SQL (`IN`, `NOT IN`, `BETWEEN`, etc.).
- * - Validación de campos y filtros.
- * - Generación de sentencias SQL con múltiples condiciones.
- *
+ * @package     gamboamartin\where
+ * @category    SQL / Filtros
+ * @author
+ * @version     1.0
+ * @license     MIT License
+ * @link        https://github.com/gamboamartin/where/
  */
-
 class where
 {
     private errores $error;
@@ -610,41 +615,121 @@ class where
 
 
     /**
-     * TOTAL
-     * Manipula y valida los datos de filtro para las fechas.
+     * REG
+     * Procesa y valida los datos de un filtro de fecha.
      *
-     * Esta función acepta un arreglo asociativo con tres claves: 'campo_1', 'campo_2' y 'fecha'.
-     * Primero, realiza una validación de los elementos del arreglo.
-     * Si la validación falla, se notifica el error y se detiene la ejecución de la función.
-     * Si la validación es correcta, cada valor se asigna a un nuevo objeto $data como una propiedad separada.
-     * Finalmente, se devuelve el objeto $data.
+     * Esta función recibe un arreglo asociativo que se espera contenga los datos para un filtro de fecha.
+     * Primero, se valida que el arreglo cumpla con los requisitos mínimos (que contenga las claves necesarias y
+     * que la fecha tenga un formato válido) utilizando el método `valida_data_filtro_fecha()`. Si la validación falla,
+     * se retorna un arreglo de error generado por el manejador de errores. Si la validación es exitosa, se extraen los
+     * valores correspondientes a las claves `'campo_1'`, `'campo_2'` y `'fecha'`, y se organizan en un objeto de tipo `stdClass`.
      *
-     * @param array $fil_fecha El arreglo que contiene los campos de fecha para filtrar.
-     *        Debe tener las claves 'campo_1', 'campo_2' y 'fecha'.
-     * @return stdClass|array Retorna un objeto con los campos validados si todo es correcto.
-     *         Si hay un error, se devuelve un arreglo con información sobre el error.
-     * @throws errores Si ocurre un error durante la validación, se lanza una excepción.
+     * ## Flujo de Ejecución:
      *
-     * @version 16.307.1
-     * @url https://github.com/gamboamartin/where/wiki/src.where.data_filtro_fecha
+     * 1. **Validación de datos:**
+     *    Se llama al método `valida_data_filtro_fecha($fil_fecha)` para asegurar que:
+     *    - El arreglo `$fil_fecha` contenga las claves obligatorias: `'campo_1'`, `'campo_2'` y `'fecha'`.
+     *    - El valor asociado a la clave `'fecha'` cumpla con el formato de fecha esperado (por ejemplo, "yyyy-mm-dd").
+     *
+     * 2. **Manejo de errores:**
+     *    Si durante la validación se detecta algún error (indicado por la bandera `errores::$error`),
+     *    la función retorna inmediatamente un arreglo con la información del error utilizando `$this->error->error()`.
+     *
+     * 3. **Extracción y asignación de valores:**
+     *    Si la validación es exitosa, se extraen los valores correspondientes a las claves `'campo_1'`,
+     *    `'campo_2'` y `'fecha'` del arreglo `$fil_fecha`.
+     *
+     * 4. **Retorno de los datos procesados:**
+     *    Se crea un objeto `stdClass`, se asignan las propiedades `campo_1`, `campo_2` y `fecha` con los
+     *    respectivos valores extraídos y se retorna dicho objeto.
+     *
+     * ## Ejemplos de Uso Exitoso:
+     *
+     * **Ejemplo 1: Uso con datos válidos en un arreglo asociativo**
+     * ```php
+     * $fil_fecha = [
+     *     'campo_1' => 'inicio',
+     *     'campo_2' => 'fin',
+     *     'fecha'   => '2023-05-20'
+     * ];
+     * $resultado = $this->data_filtro_fecha($fil_fecha);
+     * // Resultado esperado:
+     * // Un objeto stdClass con:
+     * //   $resultado->campo_1 = 'inicio'
+     * //   $resultado->campo_2 = 'fin'
+     * //   $resultado->fecha   = '2023-05-20'
+     * ```
+     *
+     * **Ejemplo 2: Uso con datos válidos y formato de fecha correcto**
+     * ```php
+     * $fil_fecha = [
+     *     'campo_1' => 'valor1',
+     *     'campo_2' => 'valor2',
+     *     'fecha'   => '2022-12-31'
+     * ];
+     * $resultado = $this->data_filtro_fecha($fil_fecha);
+     * // Resultado esperado: Objeto stdClass con:
+     * //   $resultado->campo_1 = 'valor1'
+     * //   $resultado->campo_2 = 'valor2'
+     * //   $resultado->fecha   = '2022-12-31'
+     * ```
+     *
+     * ## Ejemplos de Error:
+     *
+     * **Ejemplo 3: Falta la clave "fecha" en el arreglo**
+     * ```php
+     * $fil_fecha = [
+     *     'campo_1' => 'valor1',
+     *     'campo_2' => 'valor2'
+     * ];
+     * $resultado = $this->data_filtro_fecha($fil_fecha);
+     * // Resultado esperado: Se retorna un arreglo de error indicando que la clave 'fecha' es requerida,
+     * // por ejemplo: ['error' => 1, 'mensaje' => 'Error al validar existencia de key', ...]
+     * ```
+     *
+     * **Ejemplo 4: Fecha con formato inválido**
+     * ```php
+     * $fil_fecha = [
+     *     'campo_1' => 'valor1',
+     *     'campo_2' => 'valor2',
+     *     'fecha'   => '31-12-2022' // Formato incorrecto; se espera "yyyy-mm-dd"
+     * ];
+     * $resultado = $this->data_filtro_fecha($fil_fecha);
+     * // Resultado esperado: Se retorna un arreglo de error indicando "Error al validar fecha"
+     * // ya que la función valida_fecha detecta un formato no válido.
+     * ```
+     *
+     * @param array $fil_fecha Arreglo asociativo que contiene los datos del filtro de fecha.
+     *                         Se espera que incluya las siguientes claves:
+     *                         - **campo_1**: Primer campo del filtro.
+     *                         - **campo_2**: Segundo campo del filtro.
+     *                         - **fecha**: Valor de la fecha en el formato esperado (por defecto "yyyy-mm-dd").
+     *
+     * @return stdClass|array Retorna un objeto de tipo `stdClass` con las propiedades `campo_1`, `campo_2` y `fecha` si la validación es exitosa.
+     *                         En caso de error, retorna un array con la información detallada del error generado por `$this->error->error()`.
      */
     private function data_filtro_fecha(array $fil_fecha): stdClass|array
     {
-
         $valida = $this->valida_data_filtro_fecha(fil_fecha: $fil_fecha);
-        if(errores::$error){
-            return $this->error->error(mensaje: 'Error al validar fecha',data: $valida);
+        if (errores::$error) {
+            return $this->error->error(
+                mensaje: 'Error al validar fecha',
+                data: $valida
+            );
         }
 
         $campo_1 = $fil_fecha['campo_1'];
         $campo_2 = $fil_fecha['campo_2'];
-        $fecha = $fil_fecha['fecha'];
+        $fecha   = $fil_fecha['fecha'];
+
         $data = new stdClass();
         $data->campo_1 = $campo_1;
         $data->campo_2 = $campo_2;
-        $data->fecha = $fecha;
+        $data->fecha   = $fecha;
+
         return $data;
     }
+
 
     /**
      * REG
@@ -1276,7 +1361,7 @@ class where
         foreach ($filtro_especial as $campo => $filtro_esp) {
             if (!is_array($filtro_esp)) {
                 return $this->error->error(
-                    mensaje: "Error filtro debe ser un array filtro_especial[] = array()",
+                    mensaje: "Error filtro debe ser un array filtro_especial[] = array() del campo ".$campo,
                     data: $filtro_esp,
                     es_final: true
                 );
@@ -1436,79 +1521,205 @@ class where
 
 
     /**
-     * TOTAL
-     * Este método procesa la fecha enviada y retorna una consulta SQL representando el filtro de la fecha.
+     * REG
+     * Genera una condición SQL para filtrar registros en base a un rango de fechas.
      *
-     * @param array $filtro_fecha Representa la fecha que se va a filtrar.
+     * Este método procesa un arreglo asociativo que contiene la información del filtro de fecha y retorna
+     * una cadena SQL que representa la condición necesaria para comparar una fecha dada con un rango
+     * definido por dos valores (por ejemplo, para determinar si una fecha se encuentra entre dos límites).
      *
-     * @return array|string Retorna una consulta SQL del filtro de fecha si es exitoso. Si ocurre un error,
-     *  retorna una cadena con mensaje de error.
+     * El proceso se realiza de la siguiente manera:
      *
-     * @throws errores si no se pudo generar la consulta SQL del filtro de fecha.
+     * 1. Se llama al método interno `filtro_fecha_base()` pasándole el arreglo `$filtro_fecha` para generar
+     *    la parte central de la condición SQL. Este método se encarga de validar que el arreglo contenga los
+     *    índices requeridos y que el valor de la fecha cumpla con el formato esperado (por lo general, "yyyy-mm-dd").
      *
-     * @version 16.313.1
-     * @url https://github.com/gamboamartin/where/wiki/src.where.filtro_fecha
+     * 2. Si ocurre algún error durante la generación de la condición SQL (por ejemplo, por datos incompletos o
+     *    formato de fecha incorrecto), se retorna un arreglo con los detalles del error utilizando el manejador
+     *    de errores (`$this->error->error()`).
+     *
+     * 3. Si la condición SQL generada no es una cadena vacía, se envuelve entre paréntesis para delimitarla.
+     *
+     * @param array $filtro_fecha Arreglo asociativo que define el filtro de fecha. Debe incluir las siguientes claves:
+     *   - **campo_1** (string): El límite inferior del rango (por ejemplo, la fecha mínima).
+     *   - **campo_2** (string): El límite superior del rango (por ejemplo, la fecha máxima).
+     *   - **fecha**   (string): La fecha a evaluar (por lo general, en el formato "yyyy-mm-dd").
+     *
+     * @return array|string Devuelve:
+     *   - Un **string** con la condición SQL completa, por ejemplo:
+     *     > ("'2020-06-15' >= 2020-01-01 AND '2020-06-15' <= 2020-12-31")
+     *   - O un **array** con la información del error en caso de que se produzca algún fallo en la validación
+     *     o generación de la consulta.
+     *
+     * @example Ejemplo de uso exitoso:
+     * <pre>
+     * // Definición del filtro de fecha con datos válidos:
+     * $filtro_fecha = [
+     *     'campo_1' => '2020-01-01',
+     *     'campo_2' => '2020-12-31',
+     *     'fecha'   => '2020-06-15'
+     * ];
+     *
+     * // Supongamos que el método interno `filtro_fecha_base($filtro_fecha)` genera la siguiente cadena:
+     * // "'2020-06-15' >= 2020-01-01 AND '2020-06-15' <= 2020-12-31"
+     *
+     * // La llamada a filtro_fecha() envolverá esta cadena entre paréntesis:
+     * $sqlCondicion = $objeto->filtro_fecha($filtro_fecha);
+     *
+     * // Resultado esperado:
+     * // $sqlCondicion = "('2020-06-15' >= 2020-01-01 AND '2020-06-15' <= 2020-12-31)"
+     * </pre>
+     *
+     * @example Ejemplo cuando la condición SQL generada está vacía:
+     * <pre>
+     * // Si se pasan datos vacíos o incorrectos en el arreglo, el método interno podría retornar una cadena vacía:
+     * $filtro_fecha = [
+     *     'campo_1' => '',
+     *     'campo_2' => '',
+     *     'fecha'   => ''
+     * ];
+     *
+     * $sqlCondicion = $objeto->filtro_fecha($filtro_fecha);
+     *
+     * // Resultado esperado:
+     * // $sqlCondicion = ""
+     * </pre>
      */
-    final public function filtro_fecha(array $filtro_fecha):array|string
+    final public function filtro_fecha(array $filtro_fecha): array|string
     {
         $filtro_fecha_sql = $this->filtro_fecha_base(filtro_fecha: $filtro_fecha);
-        if(errores::$error){
-            return $this->error->error(mensaje: 'Error al obtener sql',data: $filtro_fecha_sql);
+        if (errores::$error) {
+            return $this->error->error(mensaje: 'Error al obtener sql', data: $filtro_fecha_sql);
         }
 
-        if($filtro_fecha_sql !==''){
+        if ($filtro_fecha_sql !== '') {
             $filtro_fecha_sql = "($filtro_fecha_sql)";
         }
 
         return $filtro_fecha_sql;
     }
 
+
     /**
-     * TOTAL
-     * Esta función se encarga de crear una cadena SQL para filtrar por fecha.
+     * REG
+     * Genera una cláusula SQL basada en uno o varios filtros de fecha.
      *
-     * @param array $filtro_fecha Un array que contiene los criterios de filtro de fecha.
+     * Este método itera sobre un arreglo de filtros de fecha, donde cada filtro es a su vez un arreglo que
+     * contiene la información necesaria para definir un rango de fecha. Para cada filtro, se realiza lo siguiente:
      *
-     * @return array|string Retorna una cadena SQL si todo fue exitoso, o un array de errores si hubo algún problema.
+     * 1. **Verificación del tipo de filtro:**
+     *    Se comprueba que cada elemento del arreglo `$filtro_fecha` sea un arreglo. Si algún elemento no lo es,
+     *    se retorna inmediatamente un error indicando que el filtro debe ser un arreglo.
      *
-     * @throws errores Si $fil_fecha no es un array.
+     * 2. **Validación del filtro de fecha:**
+     *    Se invoca el método `valida_filtro_fecha()` pasándole el filtro actual. Este método se encarga de
+     *    validar que el filtro contenga las claves necesarias (por ejemplo, `'campo_1'`, `'campo_2'` y `'fecha'`)
+     *    y que el valor de la fecha tenga un formato correcto. En caso de error en la validación, se retorna un
+     *    error con la información correspondiente.
      *
-     * La función itera sobre cada $fil_fecha en $filtro_fecha.
-     * Para cada $fil_fecha, valida el filtrado de la fecha utilizando $this->valida_filtro_fecha(fil_fecha: $fil_fecha).
-     * Si hay algun error de validación, retorna un error con datos relacionados al error.
+     * 3. **Generación de la cláusula SQL:**
+     *    Se llama al método `genera_sql_filtro_fecha()` con el filtro actual y la cláusula SQL acumulada hasta el momento
+     *    (almacenada en `$filtro_fecha_sql`). Este método genera la parte SQL que corresponde al filtro de fecha.
+     *    Si ocurre algún error al generar el SQL, se retorna un error.
      *
-     * Luego, genera la cadena SQL utilizando $this->genera_sql_filtro_fecha(fil_fecha: $fil_fecha, filtro_fecha_sql: $filtro_fecha_sql)
-     * Si hay algun error al generar la cadena SQL, retorna un error con datos relacionados al error.
+     * 4. **Concatenación de las cláusulas SQL:**
+     *    La cláusula SQL generada para cada filtro se concatena a la variable `$filtro_fecha_sql`.
      *
-     * Finalmente, agrega la cadena SQL al $filtro_fecha_sql y al final del ciclo retorna $filtro_fecha_sql
+     * Finalmente, el método retorna la cláusula SQL completa resultante de la concatenación de todos los filtros procesados.
      *
-     * @version 16.312.1
-     * @url https://github.com/gamboamartin/where/wiki/src.where.filtro_fecha_base
+     * ## Valor de Retorno
+     * - **Éxito:** Retorna un string que contiene la cláusula SQL resultante, por ejemplo:
+     *   ```sql
+     *   AND('2023-05-20' >= campo_inicio AND '2023-05-20' <= campo_fin)AND('2023-06-15' >= campo_inicio2 AND '2023-06-15' <= campo_fin2)
+     *   ```
+     * - **Error:** Retorna un arreglo con la información del error generado por `$this->error->error()`.
+     *
+     * ## Ejemplos de Uso Exitoso
+     *
+     * **Ejemplo 1: Un solo filtro de fecha**
+     * ```php
+     * $filtro_fecha = [
+     *     [
+     *         'campo_1' => '2023-01-01',  // Valor inferior del rango
+     *         'campo_2' => '2023-12-31',  // Valor superior del rango
+     *         'fecha'   => '2023-06-15'   // Fecha a evaluar
+     *     ]
+     * ];
+     *
+     * $sqlFiltro = $this->filtro_fecha_base($filtro_fecha);
+     * // Suponiendo que los métodos internos generan correctamente el SQL,
+     * // $sqlFiltro podría contener una cadena similar a:
+     * // "AND('2023-06-15' >= 2023-01-01 AND '2023-06-15' <= 2023-12-31)"
+     * ```
+     *
+     * **Ejemplo 2: Múltiples filtros de fecha concatenados**
+     * ```php
+     * $filtro_fecha = [
+     *     [
+     *         'campo_1' => '2023-01-01',
+     *         'campo_2' => '2023-06-30',
+     *         'fecha'   => '2023-03-15'
+     *     ],
+     *     [
+     *         'campo_1' => '2023-07-01',
+     *         'campo_2' => '2023-12-31',
+     *         'fecha'   => '2023-09-10'
+     *     ]
+     * ];
+     *
+     * $sqlFiltro = $this->filtro_fecha_base($filtro_fecha);
+     * // El resultado podría ser algo como:
+     * // "AND('2023-03-15' >= 2023-01-01 AND '2023-03-15' <= 2023-06-30)AND('2023-09-10' >= 2023-07-01 AND '2023-09-10' <= 2023-12-31)"
+     * ```
+     *
+     * ## Consideraciones Adicionales
+     * - Es importante que cada filtro de fecha en el arreglo `$filtro_fecha` esté correctamente formado y contenga
+     *   las claves necesarias (`'campo_1'`, `'campo_2'` y `'fecha'`), de lo contrario, el método retornará un error.
+     * - La cadena `$filtro_fecha_sql` se utiliza como acumulador de la cláusula SQL generada para cada filtro, permitiendo
+     *   la concatenación de múltiples filtros.
+     *
+     * @param array $filtro_fecha Arreglo que contiene uno o más filtros de fecha. Cada filtro debe ser un arreglo asociativo
+     *                            que incluya las claves:
+     *                            - `'campo_1'`: Límite inferior del rango.
+     *                            - `'campo_2'`: Límite superior del rango.
+     *                            - `'fecha'`:   La fecha que se evaluará.
+     *
+     * @return array|string Retorna un string con la cláusula SQL completa si la validación y generación fueron exitosas;
+     *                      en caso de error, retorna un arreglo con la información del error.
      */
     private function filtro_fecha_base(array $filtro_fecha): array|string
     {
         $filtro_fecha_sql = '';
-        foreach ($filtro_fecha as $fil_fecha){
-            if(!is_array($fil_fecha)){
-                return $this->error->error(mensaje: 'Error $fil_fecha debe ser un array',data: $fil_fecha,
-                    es_final: true);
+        foreach ($filtro_fecha as $fil_fecha) {
+            if (!is_array($fil_fecha)) {
+                return $this->error->error(
+                    mensaje: 'Error $fil_fecha debe ser un array',
+                    data: $fil_fecha,
+                    es_final: true
+                );
             }
 
             $valida = $this->valida_filtro_fecha(fil_fecha: $fil_fecha);
-            if(errores::$error){
-                return $this->error->error(mensaje: 'Error al validar filtro',data: $valida);
+            if (errores::$error) {
+                return $this->error->error(
+                    mensaje: 'Error al validar filtro',
+                    data: $valida
+                );
             }
 
             $sql = $this->genera_sql_filtro_fecha(fil_fecha: $fil_fecha, filtro_fecha_sql: $filtro_fecha_sql);
-            if(errores::$error){
-                return $this->error->error(mensaje: 'Error al obtener sql',data: $sql);
+            if (errores::$error) {
+                return $this->error->error(
+                    mensaje: 'Error al obtener sql',
+                    data: $sql
+                );
             }
 
-            $filtro_fecha_sql.= $sql;
-
+            $filtro_fecha_sql .= $sql;
         }
         return $filtro_fecha_sql;
     }
+
 
     /**
      * REG
@@ -1746,8 +1957,6 @@ class where
 
         return $sentencia;
     }
-
-
 
 
     /**
@@ -2592,160 +2801,412 @@ class where
 
 
     /**
-     * TOTAL
-     * El método sql_fecha genera un fragmento de consulta SQL basado en un rango de fechas.
+     * REG
+     * Genera una condición SQL para filtrar fechas.
      *
-     * Este método toma dos parámetros: uno para la conjunción de SQL (AND / OR etc.) y otro
-     * para un objeto de datos que contiene las fechas. Las fechas ingresadas se validan y luego
-     * se utilizan para construir una consulta SQL que puede usarse para filtrar registros entre dos fechas.
+     * Esta función construye y retorna una cadena SQL que utiliza un operador lógico (por ejemplo, "AND")
+     * para comparar una fecha proporcionada con dos límites: un valor mínimo y un valor máximo. Los límites se
+     * extraen del objeto `$data` a partir de las propiedades `campo_1` y `campo_2`, y la fecha a evaluar se
+     * obtiene de la propiedad `fecha`.
      *
-     * @param string $and La conjunción de SQL (AND, OR, etc.).
-     * @param stdClass $data Objeto de datos que debe contener `fecha`, `campo_1`, y `campo_2`.
-     *                       `fecha` es la columna de la fecha, `campo_1` es la fecha de inicio
-     *                       y `campo_2` es la fecha de fin para el filtro de la consulta SQL.
+     * Antes de construir la cadena SQL, la función realiza las siguientes validaciones:
      *
-     * @throws errores En caso de que el objeto de datos no contenga alguna clave requerida o
-     *                   si algún valor está vacío o si la fecha proporcionada no es válida.
+     * 1. **Validación de existencia y contenido de propiedades:**
+     *    - Verifica que el objeto `$data` contenga las propiedades `'fecha'`, `'campo_1'` y `'campo_2'`.
+     *    - Para cada propiedad, se comprueba que exista y que, tras aplicar `trim()`, su valor no sea una cadena vacía.
+     *      Si alguna de estas condiciones no se cumple, se retorna un array de error utilizando el manejador de errores.
      *
-     * @return string|array Consulta SQL generada como string. En caso de error, devuelve un array
-     *                      con datos de error.
+     * 2. **Validación del formato de la fecha:**
+     *    - Se valida que el valor de la propiedad `fecha` cumpla con el formato de fecha esperado llamando a
+     *      `$this->validacion->valida_fecha()`. Si la validación falla, se retorna un array con el error correspondiente.
      *
-     * @example sql_fecha('AND', (object)['fecha' => 'created_at', 'campo_1' => '2023-01-01', 'campo_2' => '2023-12-31']);
-     *          Esto generaría: "(created_at >= '2023-01-01' AND created_at <= '2023-12-31')"
+     * Si todas las validaciones son exitosas, la función retorna una cadena SQL que aplica el operador lógico
+     * `$and` y verifica que la fecha indicada se encuentre entre los valores de `campo_1` y `campo_2`.
      *
-     * @version 16.309.1
-     * @url https://github.com/gamboamartin/where/wiki/src.where.sql_fecha
+     * ## Ejemplos de Uso Exitoso:
+     *
+     * **Ejemplo 1: Uso correcto con datos válidos**
+     * ```php
+     * // Supongamos que $and contiene el operador lógico "AND" y $data es un objeto stdClass con las propiedades necesarias:
+     * $data = new stdClass();
+     * $data->fecha    = '2023-05-20';
+     * $data->campo_1  = '2023-01-01';
+     * $data->campo_2  = '2023-12-31';
+     *
+     * // Llamada a la función:
+     * $sqlCondicion = $this->sql_fecha("AND", $data);
+     *
+     * // Resultado esperado:
+     * // "AND('2023-05-20' >= 2023-01-01 AND '2023-05-20' <= 2023-12-31)"
+     * ```
+     *
+     * **Ejemplo 2: Uso con espacios en blanco**
+     * ```php
+     * $data = new stdClass();
+     * $data->fecha    = ' 2023-05-20 ';  // Espacios antes y después serán eliminados con trim()
+     * $data->campo_1  = '2023-01-01';
+     * $data->campo_2  = '2023-12-31';
+     *
+     * $sqlCondicion = $this->sql_fecha("AND", $data);
+     * // Resultado: "AND('2023-05-20' >= 2023-01-01 AND '2023-05-20' <= 2023-12-31)"
+     * ```
+     *
+     * ## Ejemplos de Casos de Error:
+     *
+     * **Ejemplo 3: Falta una propiedad requerida**
+     * ```php
+     * $data = new stdClass();
+     * $data->fecha   = '2023-05-20';
+     * // Falta la propiedad 'campo_1'
+     * $data->campo_2 = '2023-12-31';
+     *
+     * $resultado = $this->sql_fecha("AND", $data);
+     * // Resultado esperado: Un array de error indicando "error no existe $data->campo_1".
+     * ```
+     *
+     * **Ejemplo 4: Valor de la fecha vacío**
+     * ```php
+     * $data = new stdClass();
+     * $data->fecha    = '   ';  // Cadena vacía tras aplicar trim()
+     * $data->campo_1  = '2023-01-01';
+     * $data->campo_2  = '2023-12-31';
+     *
+     * $resultado = $this->sql_fecha("AND", $data);
+     * // Resultado esperado: Un array de error indicando "error esta vacio $data->fecha".
+     * ```
+     *
+     * **Ejemplo 5: Formato de fecha inválido**
+     * ```php
+     * $data = new stdClass();
+     * $data->fecha    = '20-05-2023';  // Formato incorrecto
+     * $data->campo_1  = '2023-01-01';
+     * $data->campo_2  = '2023-12-31';
+     *
+     * $resultado = $this->sql_fecha("AND", $data);
+     * // Resultado esperado: Un array de error indicando "error al validar fecha",
+     * // derivado de la función valida_fecha que detecta el formato incorrecto.
+     * ```
+     *
+     * @param string   $and  Operador lógico (por ejemplo, "AND") que se usará para concatenar la condición SQL.
+     * @param stdClass $data Objeto que debe contener las propiedades:
+     *                       - **fecha**: La fecha a comparar (en formato válido, por ejemplo, "yyyy-mm-dd").
+     *                       - **campo_1**: Valor mínimo para la comparación.
+     *                       - **campo_2**: Valor máximo para la comparación.
+     *
+     * @return string|array Retorna una cadena SQL que representa la condición de fecha si la validación es exitosa.
+     *                      En caso de error, retorna un array con la información del error generado por `$this->error->error()`.
      */
     private function sql_fecha(string $and, stdClass $data): string|array
     {
-        $keys = array('fecha','campo_1','campo_2');
-        foreach($keys as $key){
-            if(!isset($data->$key)){
-                return $this->error->error(mensaje: 'error no existe $data->'.$key, data: $data, es_final: true);
+        $keys = array('fecha', 'campo_1', 'campo_2');
+        foreach ($keys as $key) {
+            if (!isset($data->$key)) {
+                return $this->error->error(
+                    mensaje: 'error no existe $data->' . $key,
+                    data: $data,
+                    es_final: true
+                );
             }
-            if(trim($data->$key) === ''){
-                return $this->error->error(mensaje:'error esta vacio $data->'.$key, data:$data, es_final: true);
+            if (trim($data->$key) === '') {
+                return $this->error->error(
+                    mensaje: 'error esta vacio $data->' . $key,
+                    data: $data,
+                    es_final: true
+                );
             }
         }
+        // Se valida que el valor de 'fecha' cumpla con el formato de fecha esperado.
         $keys = array('fecha');
-        foreach($keys as $key){
+        foreach ($keys as $key) {
             $valida = $this->validacion->valida_fecha(fecha: $data->$key);
-            if(errores::$error){
-                return $this->error->error(mensaje:'error al validar '.$key,data: $valida);
+            if (errores::$error) {
+                return $this->error->error(
+                    mensaje: 'error al validar ' . $key,
+                    data: $valida
+                );
             }
         }
 
         return "$and('$data->fecha' >= $data->campo_1 AND '$data->fecha' <= $data->campo_2)";
     }
 
+
     /**
-     * TOTAL
-     * Método privado que genera una cláusula NOT IN SQL a partir de un arreglo proporcionado.
+     * REG
+     * Genera la cláusula SQL NOT IN a partir de un arreglo de datos que define la cláusula.
      *
-     * @param array $not_in Arreglo de elementos a ser excluidos en la consulta SQL.
+     * Este método realiza las siguientes operaciones:
      *
-     * @return array|string Regresa la cláusula NOT IN SQL generada o un mensaje de error en caso de un error
-     * detectado en la generación de la cláusula.
+     * 1. Llama al método `data_in()` pasando el arreglo `$not_in` para obtener un objeto que contenga:
+     *    - `llave`: el nombre de la columna en la cláusula NOT IN.
+     *    - `values`: el array de valores que se incluirán en la cláusula.
      *
-     * @throws errores Lanza una excepción de tipo Error en caso de error en la generación de la cláusula SQL.
-     * @version 16.276.1
-     * @url https://github.com/gamboamartin/where/wiki/src.where.genera_not_in
+     * 2. Si ocurre un error durante la obtención de los datos (por ejemplo, si faltan claves requeridas),
+     *    se retorna un array de error utilizando `$this->error->error()`.
+     *
+     * 3. Con el objeto obtenido, se llama al método `not_in_sql()`, el cual genera la cláusula SQL NOT IN
+     *    utilizando la llave y los valores proporcionados.
+     *
+     * 4. Si ocurre un error durante la generación de la cláusula SQL, se retorna un array con el error.
+     *
+     * 5. En caso de éxito, se retorna la cláusula SQL NOT IN generada.
+     *
+     * @param array $not_in Un arreglo asociativo que debe contener al menos las claves:
+     *                      - `'llave'`  (string): El nombre de la columna sobre la que se aplicará la cláusula NOT IN.
+     *                      - `'values'` (array): Un array de valores que se incluirán en la cláusula.
+     *
+     * @return array|string Retorna la cláusula SQL NOT IN en forma de cadena, por ejemplo:
+     *                      "categoria_id NOT IN ('10','20','30')", o un array con los detalles del error en caso de fallo.
+     *
+     * @example Ejemplo de uso exitoso:
+     * ```php
+     * $not_in = [
+     *     'llave'  => 'categoria_id',
+     *     'values' => ['10', '20', '30']
+     * ];
+     * $resultado = $this->genera_not_in($not_in);
+     * // Resultado esperado: "categoria_id NOT IN ('10','20','30')"
+     * ```
+     *
+     * @example Ejemplo de error:
+     * ```php
+     * $not_in = [
+     *     'llave'  => '', // Llave vacía provocará un error.
+     *     'values' => ['10', '20', '30']
+     * ];
+     * $resultado = $this->genera_not_in($not_in);
+     * // Resultado esperado: Array de error con el mensaje "Error al generar data in"
+     * ```
      */
     private function genera_not_in(array $not_in): array|string
     {
         $data_in = $this->data_in(in: $not_in);
-        if(errores::$error){
-            return $this->error->error(mensaje: 'Error al generar data in',data: $data_in);
+        if (errores::$error) {
+            return $this->error->error(
+                mensaje: 'Error al generar data in',
+                data: $data_in
+            );
         }
 
-        $not_in_sql = $this->not_in_sql(llave:  $data_in->llave, values:$data_in->values);
-        if(errores::$error){
-            return $this->error->error(mensaje: 'Error al generar sql',data: $not_in_sql);
+        $not_in_sql = $this->not_in_sql(llave: $data_in->llave, values: $data_in->values);
+        if (errores::$error) {
+            return $this->error->error(
+                mensaje: 'Error al generar sql',
+                data: $not_in_sql
+            );
         }
         return $not_in_sql;
     }
 
+
     /**
-     * TOTAL
-     * Genera la cláusula SQL NOT IN basada en los valores proporcionados.
+     * REG
+     * Genera la cláusula SQL NOT IN a partir de un arreglo de datos.
      *
-     * Esta función toma una matriz asociativa como parámetro, donde `llave` es el nombre del campo y `values` es una
-     * matriz de valores que se utilizarán en la cláusula NOT IN en una sentencia SQL. Luego, genera la cláusula SQL
-     * NOT IN correspondiente.
+     * Este método valida que el arreglo de entrada `$not_in` contenga las claves requeridas:
+     * 'llave' y 'values'. Si la validación es exitosa, se procede a generar la cláusula SQL
+     * NOT IN utilizando el método interno `genera_not_in()`. En caso de que el arreglo `$not_in`
+     * esté vacío, se retorna una cadena vacía.
      *
-     * Si ocurre algún error durante la validación de los parámetros o la generación de la cláusula SQL NOT IN,
-     * la función devolverá un mensaje de error.
+     * El proceso es el siguiente:
+     * 1. Se verifica que el arreglo `$not_in` tenga al menos un elemento. Si es así, se define un
+     *    arreglo de claves requeridas: `['llave', 'values']`.
+     * 2. Se utiliza el método `valida_existencia_keys()` de la propiedad `validacion` para confirmar
+     *    que el arreglo `$not_in` contenga ambas claves. Si falta alguna, se retorna un error.
+     * 3. Se llama al método interno `genera_not_in()` pasando el arreglo `$not_in`, el cual se encarga
+     *    de generar la cláusula SQL NOT IN utilizando la llave y los valores.
+     * 4. Si se produce algún error en la generación de la cláusula, se retorna el error correspondiente.
+     * 5. En caso de éxito, se retorna la cláusula SQL NOT IN generada.
      *
-     * @param array $not_in Matriz asociativa con los claves 'llave' y 'values'.
-     *        Ejemplo: ['llave' => 'miCampo', 'values' => [1, 2, 3]]
+     * @param array $not_in Arreglo asociativo que debe contener las claves:
+     *                      - 'llave'  (string): el nombre de la columna sobre la cual se aplicará la cláusula NOT IN.
+     *                      - 'values' (array): un array de valores que se incluirán en la cláusula.
      *
-     * @return string|array Devuelve la cláusula SQL NOT IN como una cadena si la función se ejecuta correctamente.
-     *                      En caso de error, devuelve una matriz con los detalles del error.
+     * @return array|string Retorna una cadena que representa la cláusula SQL NOT IN, por ejemplo:
+     *                      "categoria_id NOT IN ('10','20','30')". En caso de error, retorna un array
+     *                      con los detalles del error.
      *
-     * @version 16.278.1
-     * @url https://github.com/gamboamartin/where/wiki/src.where.genera_not_in_sql
+     * @example Ejemplo de uso exitoso:
+     * ```php
+     * $not_in = [
+     *     'llave'  => 'categoria_id',
+     *     'values' => ['10', '20', '30']
+     * ];
+     * $resultado = $this->genera_not_in_sql($not_in);
+     * // Resultado esperado: "categoria_id NOT IN ('10','20','30')"
+     * ```
+     *
+     * @example Ejemplo sin datos (arreglo vacío):
+     * ```php
+     * $not_in = [];
+     * $resultado = $this->genera_not_in_sql($not_in);
+     * // Resultado esperado: ""
+     * ```
+     *
+     * @example Ejemplo de error:
+     * ```php
+     * $not_in = [
+     *     'llave'  => 'categoria_id'
+     *     // Falta la clave 'values'
+     * ];
+     * $resultado = $this->genera_not_in_sql($not_in);
+     * // Resultado esperado: Array de error indicando que 'values' no existe.
+     * ```
      */
     final public function genera_not_in_sql(array $not_in): array|string
     {
         $not_in_sql = '';
-        if(count($not_in)>0){
-            $keys = array('llave','values');
+        if (count($not_in) > 0) {
+            $keys = array('llave', 'values');
             $valida = $this->validacion->valida_existencia_keys(keys: $keys, registro: $not_in);
-            if(errores::$error){
-                return $this->error->error(mensaje: 'Error al validar not_in',data: $valida);
+            if (errores::$error) {
+                return $this->error->error(mensaje: 'Error al validar not_in', data: $valida);
             }
             $not_in_sql = $this->genera_not_in(not_in: $not_in);
-            if(errores::$error){
-                return $this->error->error(mensaje: 'Error al generar sql',data: $not_in_sql);
+            if (errores::$error) {
+                return $this->error->error(mensaje: 'Error al generar sql', data: $not_in_sql);
             }
-
         }
         return $not_in_sql;
     }
 
+
     /**
-     * TOTAL
-     * La función 'genera_sql_filtro_fecha' es privada y se encarga de generar un filtro de SQL para fechas.
+     * REG
+     * Genera una condición SQL para filtrar resultados basados en una fecha.
      *
-     * @param array $fil_fecha Es el filtro de fecha a validar y procesar.
-     * @param string $filtro_fecha_sql Es un string que contiene la sentencia SQL para el filtro de fecha.
-     * @return array|string Retorna un string con la sentencia SQL generada o un arreglo en caso de error.
+     * Esta función procesa un arreglo de datos de filtro para fechas y, mediante una serie de pasos
+     * de validación y transformación, construye una cadena SQL que puede ser utilizada en una cláusula
+     * WHERE para filtrar resultados según una fecha determinada.
      *
-     * @throws errores Se puede lanzar una excepción en caso de que haya un error al validar la fecha, generar datos, obtener el 'and' o al obtener el sql.
+     * El flujo de ejecución es el siguiente:
      *
-     * La función sigue estos pasos:
-     * 1. Valida el filtro de fechas. Si hay un error, retorna un mensaje de error relatando un problema al validar la fecha.
-     * 2. Genera datos a partir del filtro de fechas. Si hay un error, retorna un mensaje de error relatando un problema al generar datos.
-     * 3. Obtiene el 'and' necesario para el filtro de fechas SQL. Si hay un error, retorna un mensaje de error relatando un problema al obtener el 'and'.
-     * 4. Genera la sentencia SQL de fecha. Si hay un error, retorna un mensaje de error relatando un problema al generar la sentencia SQL.
-     * 5. Si todo ha ido bien, retorna la sentencia SQL generada.
+     * 1. **Validación de los datos del filtro de fecha:**
+     *    Se llama al método `valida_data_filtro_fecha()` pasando el arreglo `$fil_fecha`.
+     *    Este método valida que el arreglo contenga los índices requeridos (por ejemplo, `'campo_1'`, `'campo_2'` y `'fecha'`)
+     *    y que cada uno tenga un valor no vacío y, en el caso de la fecha, que cumpla con el formato esperado.
+     *    Si la validación falla, se retorna un arreglo de error.
      *
-     * @version 16.311.1
-     * @url https://github.com/gamboamartin/where/wiki/src.where.genera_sql_filtro_fecha
+     * 2. **Generación de los datos del filtro:**
+     *    Se invoca `data_filtro_fecha()` con `$fil_fecha` para transformar los datos de filtro en un objeto `stdClass`
+     *    que contenga las propiedades necesarias para construir la condición SQL.
+     *    Si ocurre algún error durante esta transformación, se retorna un arreglo de error.
+     *
+     * 3. **Obtención del operador lógico para el filtro:**
+     *    Se llama al método `and_filtro_fecha()` pasando la cadena `$filtro_fecha_sql`.
+     *    Este método devuelve el operador lógico (por ejemplo, "AND") o cualquier otra condición adicional que se
+     *    deba aplicar en la cláusula SQL. Si falla, se retorna un error.
+     *
+     * 4. **Construcción de la condición SQL:**
+     *    Finalmente, se utiliza el método `sql_fecha()` pasando el operador obtenido y el objeto de datos generado.
+     *    Este método construye la cadena SQL final, validando nuevamente que la fecha cumpla con el formato esperado.
+     *    Si ocurre un error durante la construcción, se retorna un arreglo de error.
+     *
+     * Si todas las operaciones se completan exitosamente, la función retorna una cadena SQL con la siguiente estructura:
+     *
+     *     "$and('$data->fecha' >= $data->campo_1 AND '$data->fecha' <= $data->campo_2)"
+     *
+     * ## Ejemplos de Uso Exitoso:
+     *
+     * **Ejemplo 1: Uso correcto con datos válidos**
+     * ```php
+     * $fil_fecha = [
+     *     'campo_1' => '2023-01-01',
+     *     'campo_2' => '2023-12-31',
+     *     'fecha'   => '2023-06-15'
+     * ];
+     * $filtro_fecha_sql = "AND";
+     *
+     * $sql = $this->genera_sql_filtro_fecha($fil_fecha, $filtro_fecha_sql);
+     * // Resultado esperado:
+     * // "AND('2023-06-15' >= 2023-01-01 AND '2023-06-15' <= 2023-12-31)"
+     * ```
+     *
+     * **Ejemplo 2: Uso con datos que incluyen espacios**
+     * ```php
+     * $fil_fecha = [
+     *     'campo_1' => ' 2023-01-01 ',
+     *     'campo_2' => ' 2023-12-31 ',
+     *     'fecha'   => ' 2023-06-15 '
+     * ];
+     * $filtro_fecha_sql = "AND";
+     *
+     * $sql = $this->genera_sql_filtro_fecha($fil_fecha, $filtro_fecha_sql);
+     * // Resultado esperado tras aplicar trim():
+     * // "AND('2023-06-15' >= 2023-01-01 AND '2023-06-15' <= 2023-12-31)"
+     * ```
+     *
+     * ## Ejemplos de Casos de Error:
+     *
+     * **Ejemplo 3: Falta un índice requerido**
+     * ```php
+     * $fil_fecha = [
+     *     'campo_1' => '2023-01-01',
+     *     // Falta 'campo_2'
+     *     'fecha'   => '2023-06-15'
+     * ];
+     *
+     * $sql = $this->genera_sql_filtro_fecha($fil_fecha, "AND");
+     * // Resultado esperado: Un arreglo de error indicando que "error no existe $data->campo_2".
+     * ```
+     *
+     * **Ejemplo 4: Formato de fecha inválido**
+     * ```php
+     * $fil_fecha = [
+     *     'campo_1' => '2023-01-01',
+     *     'campo_2' => '2023-12-31',
+     *     'fecha'   => '15/06/2023'  // Formato incorrecto
+     * ];
+     *
+     * $sql = $this->genera_sql_filtro_fecha($fil_fecha, "AND");
+     * // Resultado esperado: Un arreglo de error indicando "Error al validar fecha", ya que el formato de 'fecha' es incorrecto.
+     * ```
+     *
+     * @param array  $fil_fecha         Arreglo que contiene los datos de filtro. Debe incluir:
+     *                                  - 'campo_1': Valor mínimo para la comparación de fecha.
+     *                                  - 'campo_2': Valor máximo para la comparación de fecha.
+     *                                  - 'fecha':   La fecha que se desea filtrar (debe tener un formato válido).
+     * @param string $filtro_fecha_sql  Cadena que define el operador lógico o condiciones adicionales para el filtro SQL.
+     *
+     * @return array|string Retorna la cadena SQL que representa la condición de filtro si todo es válido, o un arreglo
+     *                      con la información del error (generado a través de `$this->error->error()`) si alguna validación falla.
      */
     private function genera_sql_filtro_fecha(array $fil_fecha, string $filtro_fecha_sql): array|string
     {
         $valida = $this->valida_data_filtro_fecha(fil_fecha: $fil_fecha);
-        if(errores::$error){
-            return $this->error->error(mensaje: 'Error al validar fecha',data: $valida);
+        if (errores::$error) {
+            return $this->error->error(
+                mensaje: 'Error al validar fecha',
+                data: $valida
+            );
         }
 
         $data = $this->data_filtro_fecha(fil_fecha: $fil_fecha);
-        if(errores::$error){
-            return $this->error->error(mensaje:'Error al generar datos',data:$data);
+        if (errores::$error) {
+            return $this->error->error(
+                mensaje: 'Error al generar datos',
+                data: $data
+            );
         }
 
         $and = $this->and_filtro_fecha(txt: $filtro_fecha_sql);
-        if(errores::$error){
-            return $this->error->error(mensaje:'Error al obtener and',data:$and);
+        if (errores::$error) {
+            return $this->error->error(
+                mensaje: 'Error al obtener and',
+                data: $and
+            );
         }
 
-        $sql = $this->sql_fecha(and:$and,data:  $data);
-        if(errores::$error){
-            return $this->error->error(mensaje:'Error al obtener sql',data:$sql);
+        $sql = $this->sql_fecha(and: $and, data: $data);
+        if (errores::$error) {
+            return $this->error->error(
+                mensaje: 'Error al obtener sql',
+                data: $sql
+            );
         }
         return $sql;
     }
+
 
     /**
      * REG
@@ -2862,54 +3323,69 @@ class where
 
 
     /**
-     * TOTAL
-     * Genera una cláusula SQL NOT IN a partir de una llave y valores proporcionados.
+     * REG
+     * Genera la cláusula SQL NOT IN a partir de una llave (nombre de columna) y un conjunto de valores.
      *
-     * @param string $llave Clave que será usada en la cláusula NOT IN.
-     * @param array $values Valores que serán incorporados en la cláusula NOT IN.
+     * Esta función realiza las siguientes operaciones:
+     * 1. Elimina espacios en blanco de la llave mediante `trim()` y verifica que la llave no esté vacía.
+     *    Si la llave está vacía, retorna un error utilizando `$this->error->error()` con el mensaje
+     *    "Error la llave esta vacia".
+     * 2. Convierte el array de valores en una cadena SQL adecuada para una cláusula IN utilizando el método
+     *    `values_sql_in()`. Si ocurre algún error durante este proceso, retorna dicho error.
+     * 3. Si la cadena de valores generada no es vacía, construye la cláusula SQL NOT IN concatenando la llave,
+     *    el literal "NOT IN" y la cadena de valores entre paréntesis.
+     * 4. Finalmente, retorna la cláusula SQL resultante o, en caso de error, un array con los detalles del error.
      *
-     * @return string|array Devuelve una cadena que contiene una cláusula SQL NOT IN si la operación es exitosa.
-     * Si ocurre un error, devuelve un array conteniendo detalles sobre el error.
+     * @param string $llave  Nombre del campo (columna) para la cláusula NOT IN. Este parámetro no debe estar vacío.
+     * @param array  $values Array de valores que se incluirán en la cláusula NOT IN.
      *
-     * ## Uso:
+     * @return array|string Retorna una cadena con la cláusula SQL NOT IN, por ejemplo:
+     *                      "categoria_id NOT IN ('10','20','30')",
+     *                      o un array con la información del error en caso de fallo.
+     *
+     * @example Ejemplo 1: Uso exitoso
      * ```php
-     * not_in_sql("id", [1, 2, 3])
+     * $llave = "categoria_id";
+     * $values = ["10", "20", "30"];
+     * $resultado = $this->not_in_sql($llave, $values);
+     * // Resultado esperado: "categoria_id NOT IN ('10','20','30')"
      * ```
      *
-     * ## Ejemplo de respuesta en caso de éxito:
-     * ```sql
-     * "id NOT IN (1, 2, 3)"
-     * ```
-     *
-     * ## Ejemplo de respuesta en caso de error:
+     * @example Ejemplo 2: Error por llave vacía
      * ```php
-     * [
-     *     "codigo" => "ERR_CODE",
-     *     "mensaje" => "Descripción detallada del error"
-     * ]
+     * $llave = "";
+     * $values = ["1", "2"];
+     * $resultado = $this->not_in_sql($llave, $values);
+     * // Resultado esperado: Array de error con mensaje "Error la llave esta vacia"
      * ```
-     * @version 16.272.1
-     * @url https://github.com/gamboamartin/where/wiki/src.where.not_in_sql
      */
     private function not_in_sql(string $llave, array $values): array|string
     {
         $llave = trim($llave);
-        if($llave === ''){
-            return $this->error->error(mensaje: 'Error la llave esta vacia',data: $llave, es_final: true);
+        if ($llave === '') {
+            return $this->error->error(
+                mensaje: 'Error la llave esta vacia',
+                data: $llave,
+                es_final: true
+            );
         }
 
-        $values_sql = $this->values_sql_in(values:$values);
-        if(errores::$error){
-            return $this->error->error(mensaje: 'Error al generar sql',data: $values_sql);
+        $values_sql = $this->values_sql_in(values: $values);
+        if (errores::$error) {
+            return $this->error->error(
+                mensaje: 'Error al generar sql',
+                data: $values_sql
+            );
         }
 
         $not_in_sql = '';
-        if($values_sql!==''){
-            $not_in_sql.="$llave NOT IN ($values_sql)";
+        if ($values_sql !== '') {
+            $not_in_sql .= "$llave NOT IN ($values_sql)";
         }
 
         return $not_in_sql;
     }
+
 
     /**
      * REG
@@ -2922,7 +3398,7 @@ class where
      *    lo recorta y lo asigna a `$campo`.
      *
      * 2. Valida la estructura del filtro especial para ese campo llamando a
-     *    {@see \gamboamartin\src\validaciones;::valida_data_filtro_especial()}.
+     *    {@see validaciones;::valida_data_filtro_especial()}.
      *    - Si la validación falla, retorna un error con los detalles obtenidos.
      *
      * 3. Llama al método {@see maqueta_filtro_especial()} para generar la parte SQL correspondiente
@@ -3128,66 +3604,198 @@ class where
     }
 
     /**
-     * TOTAL
-     * Esta función valida un filtro de fecha proporcionado en un array.
+     * REG
+     * Valida los datos de un filtro de fecha.
      *
-     * Dentro del array proporcionado, la función busca la presencia de las claves 'campo_1', 'campo_2' y 'fecha'.
-     * En caso de que estas claves no existan dentro del array, la función devuelve un error
-     * describiendo la ausencia de las claves requeridas.
+     * Este método se encarga de verificar que el arreglo proporcionado contenga las claves requeridas para un filtro de fecha
+     * y que el valor asociado a la clave "fecha" cumpla con el formato esperado. La validación se realiza en dos pasos:
      *
-     * Si las claves requeridas están presentes, la función procede a validar si el valor correspondiente
-     * a la clave 'fecha' es una fecha válida. Si el valor no es una fecha válida, la función devuelve un error.
+     * 1. **Verificación de claves obligatorias:**
+     *    Se valida que el arreglo `$fil_fecha` incluya las claves `'campo_1'`, `'campo_2'` y `'fecha'` utilizando el método
+     *    `valida_existencia_keys()` de la clase de validación. Si alguna de estas claves falta o es inválida, se retorna un
+     *    array de error.
      *
-     * En caso de que tanto las claves requeridas estén presentas y 'fecha' sea una fecha valida, la función devuelve true.
+     * 2. **Validación del formato de la fecha:**
+     *    Se utiliza el método `valida_fecha()` para confirmar que el valor contenido en `$fil_fecha['fecha']` cumpla con el
+     *    formato de fecha esperado (por defecto, formato "yyyy-mm-dd"). Si la fecha no es válida, se retorna un array de error.
      *
-     * @param array $fil_fecha El array que contiene el filtro de fechas. Este debe contener las claves 'campo_1', 'campo_2' y 'fecha'.
-     * @return bool|array Retorna true si las validaciones son exitosas. Retorna un array de errores si alguna validación falla.
+     * Si todas las validaciones se cumplen correctamente, el método retorna `true`.
      *
-     * @version 16.306.1
-     * @url https://github.com/gamboamartin/where/wiki/src.where.valida_data_filtro_fecha
+     * ## Ejemplos de Uso Exitoso
+     *
+     * **Ejemplo 1: Registro con datos correctos en formato array**
+     * ```php
+     * $fil_fecha = [
+     *     'campo_1' => 'valor1',
+     *     'campo_2' => 'valor2',
+     *     'fecha'   => '2023-05-20'
+     * ];
+     * $resultado = $this->valida_data_filtro_fecha($fil_fecha);
+     * // Resultado esperado: true
+     * ```
+     *
+     * **Ejemplo 2: Registro con datos correctos en formato array (otra fecha válida)**
+     * ```php
+     * $fil_fecha = [
+     *     'campo_1' => 'dato1',
+     *     'campo_2' => 'dato2',
+     *     'fecha'   => '2022-12-31'
+     * ];
+     * $resultado = $this->valida_data_filtro_fecha($fil_fecha);
+     * // Resultado esperado: true
+     * ```
+     *
+     * ## Ejemplos de Error
+     *
+     * **Ejemplo 3: Falta la clave "fecha" en el arreglo**
+     * ```php
+     * $fil_fecha = [
+     *     'campo_1' => 'valor1',
+     *     'campo_2' => 'valor2'
+     * ];
+     * $resultado = $this->valida_data_filtro_fecha($fil_fecha);
+     * // Resultado esperado: Array de error indicando "Error al validar existencia de key" para la clave "fecha".
+     * ```
+     *
+     * **Ejemplo 4: Formato de fecha inválido**
+     * ```php
+     * $fil_fecha = [
+     *     'campo_1' => 'valor1',
+     *     'campo_2' => 'valor2',
+     *     'fecha'   => '31-12-2022'  // Formato incorrecto; se espera "yyyy-mm-dd"
+     * ];
+     * $resultado = $this->valida_data_filtro_fecha($fil_fecha);
+     * // Resultado esperado: Array de error indicando "Error al validar fecha" debido a un formato no válido.
+     * ```
+     *
+     * @param array $fil_fecha Arreglo asociativo que contiene los datos del filtro de fecha.
+     *                         Se espera que incluya las claves:
+     *                         - **campo_1**: Primer campo del filtro.
+     *                         - **campo_2**: Segundo campo del filtro.
+     *                         - **fecha**: Valor que representa la fecha a validar (en formato "yyyy-mm-dd" por defecto).
+     *
+     * @return true|array Retorna `true` si todas las validaciones son exitosas; en caso de error, retorna un array
+     *                    con la información detallada del error.
      */
     private function valida_data_filtro_fecha(array $fil_fecha): true|array
     {
-        $keys = array('campo_1','campo_2','fecha');
-        $valida = $this->validacion->valida_existencia_keys(keys:$keys, registro: $fil_fecha);
-        if(errores::$error){
-            return $this->error->error(mensaje: 'Error al validar filtro',data: $valida);
+        $keys = array('campo_1', 'campo_2', 'fecha');
+        $valida = $this->validacion->valida_existencia_keys(keys: $keys, registro: $fil_fecha);
+        if (errores::$error) {
+            return $this->error->error(
+                mensaje: 'Error al validar filtro',
+                data: $valida
+            );
         }
         $valida = $this->validacion->valida_fecha(fecha: $fil_fecha['fecha']);
-        if(errores::$error){
-            return $this->error->error(mensaje:'Error al validar fecha',data:$valida);
+        if (errores::$error) {
+            return $this->error->error(
+                mensaje: 'Error al validar fecha',
+                data: $valida
+            );
         }
         return true;
     }
 
+
     /**
-     * TOTAL
-     * Esta función valida un array de filtro de fecha.
+     * REG
+     * Valida la estructura y el contenido de un filtro de fecha.
      *
-     * @param array $fil_fecha Array que contiene la información del filtro de fecha. Debería de contener los campos 'campo_1', 'campo_2' y 'fecha'.
+     * Este método se encarga de validar que el arreglo proporcionado `$fil_fecha` contenga las claves necesarias para definir un filtro de fecha,
+     * y que el valor asociado a la clave `'fecha'` sea una fecha válida. La validación se realiza en dos pasos:
      *
-     * @return bool|array Retorna verdadero si el filtro de fecha es válido. De lo contrario, retorna un Error.
+     * 1. **Validación de existencia de claves obligatorias:**
+     *    - Se define un arreglo de claves obligatorias: `['campo_1', 'campo_2', 'fecha']`.
+     *    - Se utiliza el método `valida_existencia_keys()` de la clase de validación para verificar que todas estas claves existan en `$fil_fecha`.
+     *    - Si alguna de estas claves falta, se retorna un arreglo de error indicando el problema.
      *
-     * @throws errores Posibles errores que pueden ocurrir durante la validación.
-     * @version 16.305.1
-     * @url https://github.com/gamboamartin/where/wiki/src.where.valida_filtro_fecha
+     * 2. **Validación del formato de la fecha:**
+     *    - Se define un arreglo que contiene únicamente la clave `['fecha']`.
+     *    - Se invoca el método `fechas_in_array()` pasándole el arreglo `$fil_fecha` y el arreglo de claves `['fecha']` para validar que el valor
+     *      asociado a `'fecha'` cumpla con el formato esperado (por ejemplo, "yyyy-mm-dd", "yyyy-mm-dd hh:mm:ss", etc., según la configuración interna).
+     *    - Si la validación del formato falla, se retorna un arreglo de error con la información correspondiente.
+     *
+     * Si ambas validaciones se realizan correctamente, el método retorna `true`.
+     *
+     * ## Ejemplos de Uso Exitoso:
+     *
+     * **Ejemplo 1: Filtro de fecha completo y correcto**
+     * ```php
+     * $fil_fecha = [
+     *     'campo_1' => '2023-01-01',  // Fecha de inicio
+     *     'campo_2' => '2023-12-31',  // Fecha de fin
+     *     'fecha'   => '2023-06-15'   // Fecha a validar, en formato "yyyy-mm-dd"
+     * ];
+     *
+     * $resultado = $this->valida_filtro_fecha($fil_fecha);
+     * // $resultado será true, ya que se cumplen:
+     * // - Las claves 'campo_1', 'campo_2' y 'fecha' existen.
+     * // - La fecha '2023-06-15' es válida según el formato esperado.
+     * ```
+     *
+     * **Ejemplo 2: Filtro de fecha con formato correcto en un arreglo adicional**
+     * ```php
+     * $fil_fecha = [
+     *     'campo_1' => '2022-05-01',
+     *     'campo_2' => '2022-05-31',
+     *     'fecha'   => '2022-05-15'
+     * ];
+     *
+     * $resultado = $this->valida_filtro_fecha($fil_fecha);
+     * // $resultado será true.
+     * ```
+     *
+     * ## Ejemplos de Casos de Error:
+     *
+     * **Ejemplo 3: Falta una clave obligatoria**
+     * ```php
+     * $fil_fecha = [
+     *     'campo_1' => '2023-01-01',
+     *     // Falta 'campo_2'
+     *     'fecha'   => '2023-06-15'
+     * ];
+     *
+     * $resultado = $this->valida_filtro_fecha($fil_fecha);
+     * // Se retornará un arreglo de error indicando "Error al validar filtro" por la ausencia de la clave 'campo_2'.
+     * ```
+     *
+     * **Ejemplo 4: Fecha con formato inválido**
+     * ```php
+     * $fil_fecha = [
+     *     'campo_1' => '2023-01-01',
+     *     'campo_2' => '2023-12-31',
+     *     'fecha'   => '15/06/2023'  // Formato incorrecto
+     * ];
+     *
+     * $resultado = $this->valida_filtro_fecha($fil_fecha);
+     * // Se retornará un arreglo de error indicando "Error al validar filtro" debido a que la fecha no cumple con el formato esperado.
+     * ```
+     *
+     * @param array $fil_fecha Arreglo asociativo que representa el filtro de fecha. Se espera que contenga al menos las siguientes claves:
+     *                         - 'campo_1': Representa el límite inferior (mínimo) de la fecha.
+     *                         - 'campo_2': Representa el límite superior (máximo) de la fecha.
+     *                         - 'fecha':   La fecha a validar, que debe cumplir con el formato esperado.
+     *
+     * @return bool|array Retorna `true` si el filtro de fecha es válido. En caso contrario, retorna un arreglo con la información del error
+     *                    generado por el método `$this->error->error()`.
      */
     private function valida_filtro_fecha(array $fil_fecha): bool|array
     {
-
-        $keys = array('campo_1','campo_2','fecha');
-        $valida = $this->validacion->valida_existencia_keys(keys:$keys, registro: $fil_fecha);
-        if(errores::$error){
-            return $this->error->error(mensaje: 'Error al validar filtro',data: $valida);
+        $keys = array('campo_1', 'campo_2', 'fecha');
+        $valida = $this->validacion->valida_existencia_keys(keys: $keys, registro: $fil_fecha);
+        if (errores::$error) {
+            return $this->error->error(mensaje: 'Error al validar filtro', data: $valida);
         }
 
         $keys = array('fecha');
-        $valida = $this->validacion->fechas_in_array(data:  $fil_fecha, keys: $keys);
-        if(errores::$error){
-            return $this->error->error(mensaje: 'Error al validar filtro',data: $valida);
+        $valida = $this->validacion->fechas_in_array(data: $fil_fecha, keys: $keys);
+        if (errores::$error) {
+            return $this->error->error(mensaje: 'Error al validar filtro', data: $valida);
         }
         return true;
     }
+
 
     /**
      * REG
